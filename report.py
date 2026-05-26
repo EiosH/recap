@@ -71,6 +71,8 @@ def write_run_report(report_dir: Path, report: RunReport) -> Path:
         "## 推理配置",
         f"- **MAX_NEW_TOKENS**: {report.extra.get('max_new_tokens', 'N/A')}",
         f"- **TEMPERATURE**: {report.extra.get('temperature', 'N/A')}",
+        f"- **组装模式**: {report.extra.get('assemble_mode', 'N/A')}",
+        f"- **分段目录**: `{report.extra.get('chunk_run_dir', 'N/A')}`",
         f"- **任务描述**: {m.question}",
         "",
         "## 输出文件",

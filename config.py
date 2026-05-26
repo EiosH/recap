@@ -31,19 +31,24 @@ MODEL_REGISTRY: dict[str, dict] = {
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 REPORT_DIR = Path(__file__).resolve().parent / "reports"
+CHUNK_RUN_DIR = DATA_DIR / "runs"  # 每段总结临时落盘目录
 LECTURE_TXT_NAME: str | None = "subtitles-519105.txt"
 
 # 4090 推理优化（在 Windows+4090 上同样生效）
 ENABLE_TF32 = True
 USE_FLASH_ATTENTION = True  # 见 requirements.txt；未安装时自动降级
 
-# 为避免 OOM，适当降低生成长度与单段字符数
-MAX_NEW_TOKENS = 512
+# 单段总结允许更长输出，避免提纲被截断
+MAX_NEW_TOKENS = 1536
 TEMPERATURE = 0.3
-CHUNK_CHARS = 4_000  # 单段约 4k 字符，减小注意力矩阵大小
+CHUNK_CHARS = 4_000
 
-# 进一步的 OOM 保险：按 token 控制上下文长度
-# 4090 24GB 上，为了稳定，建议把输入控制在 3k～6k tokens 量级
+# 按 token 控制每段输入上限
 MAX_INPUT_TOKENS = 3072
-# 合并提纲时每次最多合并多少段（层级合并，避免一次性把所有段塞进去）
+
+# 最终组装方式：
+# - concat：从磁盘读取各段 summary 直接拼接（推荐，不丢知识点）
+# - merge：再用 LLM 合并（更短，可能丢细节）
+ASSEMBLE_MODE = "concat"
 MERGE_BATCH = 2
+MAX_NEW_TOKENS_MERGE = 1024
