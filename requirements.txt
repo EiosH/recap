@@ -9,4 +9,5 @@ sentencepiece>=0.2.0
 protobuf>=4.25.0
 pynvml>=11.5.0
 huggingface-hub>=0.24.0
-bitsandbytes>=0.43.0; platform_system != "Darwin"
+bitsandbytes>=0.43.0
+flash-attn>=2.6.0

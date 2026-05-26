@@ -29,15 +29,15 @@ pip install -r requirements.txt
 export HF_TOKEN=你的_huggingface_token
 ```
 
-## 模型档位（可在 `config.py` 修改）
+## 模型档位（RTX 4090 24GB 优化，见 `config.py`）
 
-| 档位 | 默认 HuggingFace ID | 参数量级 |
-|------|---------------------|----------|
-| 30b  | Qwen/Qwen2.5-32B-Instruct | ~32B |
-| 20b  | google/gemma-2-27b-it     | ~27B |
-| 10b  | Qwen/Qwen2.5-14B-Instruct | ~14B |
+| 档位 | 模型 | 4090 策略 |
+|------|------|-----------|
+| 30b  | Qwen2.5-32B-Instruct | 4bit NF4（约 18–20GB 显存） |
+| 20b  | Qwen2.5-14B-Instruct | 4bit NF4（长讲义稳妥） |
+| 10b  | Qwen2.5-7B-Instruct  | BF16 全精度（最快） |
 
-默认开启 **4bit 量化**（`LOAD_IN_4BIT = True`），降低显存占用。显存足够可在 `config.py` 关闭。
+另启用 **TF32**、**Flash Attention 2**（已列入 `requirements.txt`）。
 
 ## 运行
 
@@ -53,9 +53,10 @@ python simple_agent.py
 2. 输入 `run` 生成课程知识提纲（讲义过长时会自动分块再合并）。
 3. `gpu` — 刷新显卡信息；`quit` — 退出。
 
-提纲保存为 `data/subtitles-519105-outline.txt`（与讲义同名加 `-outline` 后缀）。
+- 提纲：`data/subtitles-519105-outline.txt`
+- 完整报告：`reports/run-YYYYMMDD-HHMMSS-{档位}.md`（含耗时、显存、GPU、Token、配置、提纲全文）
 
-每次运行会输出耗时、显存、GPU 利用率、Token 等指标。
+每次运行会同时在终端打印指标，并写入上述 report。
 
 ## 注意
 

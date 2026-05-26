@@ -5,8 +5,6 @@ from __future__ import annotations
 import subprocess
 import time
 from dataclasses import dataclass, field
-from typing import Optional
-
 try:
     import pynvml
 except ImportError:
@@ -54,25 +52,33 @@ def _nvml_init() -> bool:
         return False
 
 
-def print_gpu_info() -> None:
-    print("\n" + "=" * 60)
-    print("当前显卡 / CUDA 信息")
-    print("=" * 60)
+def collect_gpu_info_text() -> str:
+    """返回显卡信息文本（用于 report）。"""
+    import io
+
+    buf = io.StringIO()
+
+    def _line(s: str = "") -> None:
+        buf.write(s + "\n")
+
+    _line("=" * 60)
+    _line("当前显卡 / CUDA 信息")
+    _line("=" * 60)
 
     if torch is not None:
-        print(f"PyTorch 版本: {torch.__version__}")
-        print(f"CUDA 是否可用: {torch.cuda.is_available()}")
+        _line(f"PyTorch 版本: {torch.__version__}")
+        _line(f"CUDA 是否可用: {torch.cuda.is_available()}")
         if torch.cuda.is_available():
-            print(f"CUDA 版本: {torch.version.cuda}")
-            print(f"GPU 数量: {torch.cuda.device_count()}")
+            _line(f"CUDA 版本: {torch.version.cuda}")
+            _line(f"GPU 数量: {torch.cuda.device_count()}")
             for i in range(torch.cuda.device_count()):
                 props = torch.cuda.get_device_properties(i)
                 total_gb = props.total_memory / (1024**3)
-                print(f"  [{i}] {props.name}")
-                print(f"      显存总量: {total_gb:.2f} GB")
-                print(f"      计算能力: {props.major}.{props.minor}")
+                _line(f"  [{i}] {props.name}")
+                _line(f"      显存总量: {total_gb:.2f} GB")
+                _line(f"      计算能力: {props.major}.{props.minor}")
     else:
-        print("未安装 PyTorch")
+        _line("未安装 PyTorch")
 
     if _nvml_init() and pynvml is not None:
         try:
@@ -87,39 +93,49 @@ def print_gpu_info() -> None:
                 temp = pynvml.nvmlDeviceGetTemperature(
                     handle, pynvml.NVML_TEMPERATURE_GPU
                 )
-                print(f"\nNVML [{i}] {name}")
-                print(
+                _line(f"\nNVML [{i}] {name}")
+                _line(
                     f"  已用显存: {mem.used / 1024**2:.0f} MB / "
                     f"{mem.total / 1024**2:.0f} MB"
                 )
-                print(f"  GPU 利用率: {util.gpu}%  显存利用率: {util.memory}%")
-                print(f"  温度: {temp}°C")
+                _line(f"  GPU 利用率: {util.gpu}%  显存利用率: {util.memory}%")
+                _line(f"  温度: {temp}°C")
         except Exception as e:
-            print(f"NVML 读取失败: {e}")
+            _line(f"NVML 读取失败: {e}")
         finally:
             try:
                 pynvml.nvmlShutdown()
             except Exception:
                 pass
     else:
-        _print_nvidia_smi_fallback()
+        smi = _nvidia_smi_text()
+        if smi:
+            _line(smi)
 
-    print("=" * 60 + "\n")
+    _line("=" * 60)
+    return buf.getvalue()
 
 
-def _print_nvidia_smi_fallback() -> None:
+def _nvidia_smi_text() -> str:
     try:
         out = subprocess.check_output(
-            ["nvidia-smi", "--query-gpu=name,memory.total,memory.used,utilization.gpu",
-             "--format=csv,noheader"],
+            [
+                "nvidia-smi",
+                "--query-gpu=name,memory.total,memory.used,utilization.gpu",
+                "--format=csv,noheader",
+            ],
             text=True,
             timeout=5,
         )
-        print("\nnvidia-smi:")
-        for line in out.strip().splitlines():
-            print(f"  {line}")
+        lines = ["nvidia-smi:"]
+        lines.extend(f"  {line}" for line in out.strip().splitlines())
+        return "\n".join(lines)
     except (FileNotFoundError, subprocess.SubprocessError):
-        print("无法读取 GPU（无 NVML / nvidia-smi）")
+        return "无法读取 GPU（无 NVML / nvidia-smi）"
+
+
+def print_gpu_info() -> None:
+    print("\n" + collect_gpu_info_text())
 
 
 def cuda_mem_mb(device: int = 0) -> float:
