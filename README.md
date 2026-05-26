@@ -50,11 +50,13 @@ python simple_agent.py
 ### 交互说明
 
 1. 输入 `30b` / `20b` / `10b` 选择模型档位。
-2. 输入 `run` 生成课程知识提纲（讲义过长时会自动分块再合并）。
-3. `gpu` — 刷新显卡信息；`quit` — 退出。
+2. 输入 `run` 生成课程知识提纲（讲义过长时会自动分块，逐段落盘再拼接）。
+3. 输入 `chat` 基于最近提纲选择模型，进入命令行对话（输入 `exit` 返回主菜单）。
+4. `gpu` — 刷新显卡信息；`quit` — 退出。
 
-- 提纲：`data/subtitles-519105-outline.txt`
-- 完整报告：`reports/run-YYYYMMDD-HHMMSS-{档位}.md`（含耗时、显存、GPU、Token、配置、提纲全文）
+- 提纲（按模型区分）：`data/subtitles-519105-outline-10b.txt` / `-20b` / `-30b`
+- 分段目录：`data/runs/YYYYMMDD-HHMMSS-{档位}/`
+- 完整报告：`reports/run-YYYYMMDD-HHMMSS-{档位}.md`
 
 每次运行会同时在终端打印指标，并写入上述 report。
 

@@ -56,6 +56,9 @@ class ChunkRun:
         return "\n\n".join(parts).strip()
 
     def save_assembled(self, text: str) -> Path:
-        out = self.run_dir / "assembled-outline.txt"
+        out = self.run_dir / f"outline-{self.model_key}.txt"
         out.write_text(text.strip() + "\n", encoding="utf-8")
+        # 兼容旧文件名
+        legacy = self.run_dir / "assembled-outline.txt"
+        legacy.write_text(text.strip() + "\n", encoding="utf-8")
         return out
