@@ -10,6 +10,7 @@ import sys
 import time
 import os
 import gc
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -22,6 +23,7 @@ from config import (
     CHUNK_CHARS,
     CHUNK_RUN_DIR,
     DATA_DIR,
+    DO_SAMPLE,
     ENABLE_TF32,
     LECTURE_TXT_NAME,
     MAX_INPUT_TOKENS,
@@ -34,6 +36,7 @@ from config import (
     USE_FLASH_ATTENTION,
 )
 from chunk_store import ChunkRun
+from lecture_prep import prepare_lecture_text
 from extract_subtitles import extract_file
 from gpu_monitor import (
     GpuSampler,
@@ -57,22 +60,32 @@ except ImportError:
 # 减少 CUDA 内存碎片（对“跑到最后 merge 才 OOM”的情况很关键）
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
-TEACHING_PROMPT = """你是一个助教。请把老师的讲课内容精炼总结成课程知识提纲。
-要求：
-- 不要赘述过多信息，条理清晰即可；
-- 必须覆盖讲课中出现的全部知识点，不要遗漏重要概念。
+SYSTEM_PROMPT = """你是大学课程助教。你的任务是根据课堂录音自动转写的英文字幕，提炼课程知识提纲（用中文输出）。
 
-讲课内容：
-{lecture}"""
+严格要求：
+1. 只总结字幕里实际讲到的内容，不要编造、不要臆测；
+2. 忽略口语重复、语气词、与课程无关的闲聊；
+3. 保留专业术语（必要时中英对照）；
+4. 用清晰的条目列出知识点，确保覆盖该段所有重要概念。"""
 
 
-MERGE_PROMPT = """你是一个助教。下面是一堂课各片段的知识提纲，请合并为一份完整、不重复的课程知识提纲。
-要求：
-- 结构化、去重，但**不要删减知识点**；
-- 保留各片段中的术语、概念、例子要点。
+USER_CHUNK_TEMPLATE = """以下是一段课堂录音的英文字幕（自动转写，可能有识别错误）：
+
+---
+{lecture}
+---
+
+请提炼本段课程知识提纲（中文，条目式）。"""
+
+
+MERGE_USER_TEMPLATE = """以下是同一堂课各片段的知识提纲，请合并为一份完整提纲（中文）：
+- 结构化、去重，但不要删减知识点；
+- 保留术语与概念。
 
 各片段提纲：
-{partials}"""
+---
+{partials}
+---"""
 
 
 def setup_4090() -> None:
@@ -144,10 +157,26 @@ def resolve_lecture_txt() -> Path:
 
 def load_lecture_text() -> tuple[Path, str]:
     path = resolve_lecture_txt()
-    text = path.read_text(encoding="utf-8").strip()
-    if not text:
+    raw = path.read_text(encoding="utf-8").strip()
+    if not raw:
         raise ValueError(f"讲义为空: {path}")
+    text = prepare_lecture_text(raw)
+    if not text:
+        raise ValueError(f"讲义预处理后为空: {path}")
     return path, text
+
+
+def format_chat_prompt(tokenizer, user_content: str) -> str:
+    """Qwen Instruct 必须用 chat template，否则容易答非所问。"""
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_content},
+    ]
+    return tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+    )
 
 
 def chunk_lecture(text: str, size: int) -> list[str]:
@@ -231,12 +260,14 @@ def build_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
         tokenizer=tokenizer,
         max_new_tokens=MAX_NEW_TOKENS,
         temperature=TEMPERATURE,
-        do_sample=True,
+        do_sample=DO_SAMPLE,
         return_full_text=False,
     )
     load_sec = time.perf_counter() - t0
     print(f"模型加载完成，耗时 {load_sec:.1f} 秒  [{quant_desc}]\n")
-    return HuggingFacePipeline(pipeline=pipe), load_sec, quant_desc
+    hf_llm = HuggingFacePipeline(pipeline=pipe)
+    hf_llm.pipeline.tokenizer = tokenizer  # 确保后续能取到 tokenizer
+    return hf_llm, load_sec, quant_desc
 
 
 def _token_len(tokenizer, text: str) -> int:
@@ -252,51 +283,61 @@ def _truncate_to_tokens(tokenizer, text: str, max_tokens: int) -> str:
 
 
 def chunk_lecture_tokens(tokenizer, text: str, max_tokens: int) -> list[str]:
-    """按 token 切分讲义，保证每段不超过 max_tokens。"""
-    lines = [ln for ln in text.split("\n") if ln.strip()]
+    """按 token 切分讲义（以段落为单位），保证每段不超过 max_tokens。"""
+    # 先按空行分段（prepare_lecture_text 已合并成段落）
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
     chunks: list[str] = []
     buf: list[str] = []
     buf_tokens = 0
 
-    for ln in lines:
-        ln_tokens = _token_len(tokenizer, ln) + 1
-        if buf and buf_tokens + ln_tokens > max_tokens:
-            chunks.append("\n".join(buf))
+    for para in paragraphs:
+        para_tokens = _token_len(tokenizer, para) + 2
+        if buf and buf_tokens + para_tokens > max_tokens:
+            chunks.append("\n\n".join(buf))
             buf = []
             buf_tokens = 0
-        # 单行过长则截断
-        if ln_tokens > max_tokens:
-            ln = _truncate_to_tokens(tokenizer, ln, max_tokens)
-            ln_tokens = _token_len(tokenizer, ln) + 1
-        buf.append(ln)
-        buf_tokens += ln_tokens
+        if para_tokens > max_tokens:
+            # 单段过长，按句子再切
+            for sent in re.split(r"(?<=[.?!])\s+", para):
+                sent = sent.strip()
+                if not sent:
+                    continue
+                st = _token_len(tokenizer, sent) + 1
+                if buf and buf_tokens + st > max_tokens:
+                    chunks.append("\n\n".join(buf))
+                    buf = []
+                    buf_tokens = 0
+                buf.append(sent)
+                buf_tokens += st
+        else:
+            buf.append(para)
+            buf_tokens += para_tokens
 
     if buf:
-        chunks.append("\n".join(buf))
+        chunks.append("\n\n".join(buf))
     return chunks
 
 
 def invoke_llm(
     llm: HuggingFacePipeline,
-    prompt_text: str,
+    tokenizer,
+    user_content: str,
     token_handler: TokenUsageHandler,
     max_new_tokens: int | None = None,
 ) -> str:
+    prompt_text = format_chat_prompt(tokenizer, user_content)
     pipe = llm.pipeline
     kwargs: dict = {}
     if max_new_tokens is not None:
         kwargs["max_new_tokens"] = max_new_tokens
 
     with torch.inference_mode():
-        if kwargs:
-            raw = pipe(prompt_text, **kwargs)
-            if isinstance(raw, list) and raw:
-                item = raw[0]
-                out = item.get("generated_text", str(item)) if isinstance(item, dict) else str(item)
-            else:
-                out = str(raw)
+        raw = pipe(prompt_text, **kwargs)
+        if isinstance(raw, list) and raw:
+            item = raw[0]
+            out = item.get("generated_text", str(item)) if isinstance(item, dict) else str(item)
         else:
-            out = llm.invoke(prompt_text, config={"callbacks": [token_handler]})
+            out = str(raw)
 
     if isinstance(out, str):
         return out.strip()
@@ -317,7 +358,7 @@ def _merge_from_files(
     token_handler: TokenUsageHandler,
 ) -> str:
     """从磁盘读取 summary 文件，小批量 LLM 合并（可选模式）。"""
-    merge_tpl = PromptTemplate.from_template(MERGE_PROMPT)
+    merge_tpl = PromptTemplate.from_template(MERGE_USER_TEMPLATE)
     paths = chunk_run.list_summaries()
     level = 0
 
@@ -337,7 +378,7 @@ def _merge_from_files(
             mp = _truncate_to_tokens(tokenizer, mp, MAX_INPUT_TOKENS)
             try:
                 merged = invoke_llm(
-                    llm, mp, token_handler, max_new_tokens=MAX_NEW_TOKENS_MERGE
+                    llm, tokenizer, mp, token_handler, max_new_tokens=MAX_NEW_TOKENS_MERGE
                 )
             except torch.OutOfMemoryError:
                 print("  [OOM] 合并阶段显存不足，降级输入长度后重试 ...")
@@ -346,7 +387,7 @@ def _merge_from_files(
                     tokenizer, mp, int(MAX_INPUT_TOKENS * 0.7)
                 )
                 merged = invoke_llm(
-                    llm, mp, token_handler, max_new_tokens=MAX_NEW_TOKENS_MERGE
+                    llm, tokenizer, mp, token_handler, max_new_tokens=MAX_NEW_TOKENS_MERGE
                 )
 
             out_path = merge_dir / f"merged-{batch_idx:03d}.txt"
@@ -371,20 +412,21 @@ def summarize_lecture(
     token_handler = TokenUsageHandler()
     chunk_run = ChunkRun.create(CHUNK_RUN_DIR, model_key, source_name)
     print(f"分段结果目录: {chunk_run.run_dir}")
+    # 保存预处理后全文，便于核对模型输入
+    (chunk_run.run_dir / "lecture-prepared.txt").write_text(lecture, encoding="utf-8")
 
     tokenizer = getattr(llm, "pipeline", None).tokenizer
     safe_in_tokens = max(512, int(MAX_INPUT_TOKENS) - 512)
     chunks = chunk_lecture_tokens(tokenizer, lecture, safe_in_tokens)
-    teach_tpl = PromptTemplate.from_template(TEACHING_PROMPT)
 
     start = time.perf_counter()
     with GpuSampler(interval=0.5) as sampler:
         print(f"讲义分 {len(chunks)} 段，逐段总结并落盘 ...")
         for i, chunk in enumerate(chunks, 1):
             print(f"  处理片段 {i}/{len(chunks)} ...")
-            header = f"【第 {i}/{len(chunks)} 段】\n"
-            prompt = teach_tpl.format(lecture=header + chunk)
-            summary = invoke_llm(llm, prompt, token_handler)
+            chunk_run.save_input(i, chunk)
+            user_msg = USER_CHUNK_TEMPLATE.format(lecture=chunk)
+            summary = invoke_llm(llm, tokenizer, user_msg, token_handler)
             saved = chunk_run.save_summary(i, summary)
             print(f"    已保存: {saved.name} ({len(summary):,} 字符)")
             _cuda_cleanup()
@@ -445,8 +487,10 @@ def main() -> None:
         print(f"错误: {e}")
         sys.exit(1)
 
+    raw_len = len(lecture_path.read_text(encoding="utf-8"))
     print(f"\n已加载讲义: {lecture_path.name}")
-    print(f"  字符数: {len(lecture_text):,}  行数: {len(lecture_text.splitlines()):,}")
+    print(f"  原始字符数: {raw_len:,}")
+    print(f"  预处理后: {len(lecture_text):,} 字符  {len(lecture_text.split(chr(10)+chr(10))):,} 段")
     print_menu()
 
     current_key = "10b"

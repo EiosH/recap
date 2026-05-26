@@ -28,6 +28,14 @@ class ChunkRun:
     def summary_path(self, index: int) -> Path:
         return self.run_dir / f"summary-{index:03d}.txt"
 
+    def input_path(self, index: int) -> Path:
+        return self.run_dir / f"input-{index:03d}.txt"
+
+    def save_input(self, index: int, text: str) -> Path:
+        path = self.input_path(index)
+        path.write_text(text.strip() + "\n", encoding="utf-8")
+        return path
+
     def save_summary(self, index: int, text: str) -> Path:
         path = self.summary_path(index)
         path.write_text(text.strip() + "\n", encoding="utf-8")

@@ -40,7 +40,8 @@ USE_FLASH_ATTENTION = True  # 见 requirements.txt；未安装时自动降级
 
 # 单段总结允许更长输出，避免提纲被截断
 MAX_NEW_TOKENS = 1536
-TEMPERATURE = 0.3
+TEMPERATURE = 0.1
+DO_SAMPLE = False  # 总结任务用贪心解码，减少胡编
 CHUNK_CHARS = 4_000
 
 # 按 token 控制每段输入上限
