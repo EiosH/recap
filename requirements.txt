@@ -1,0 +1,12 @@
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-huggingface>=0.1.0
+langchain-core>=0.3.0
+transformers>=4.44.0
+torch>=2.2.0
+accelerate>=0.33.0
+sentencepiece>=0.2.0
+protobuf>=4.25.0
+pynvml>=11.5.0
+huggingface-hub>=0.24.0
+bitsandbytes>=0.43.0; platform_system != "Darwin"

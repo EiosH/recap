@@ -1,0 +1,2872 @@
+I love you.
+I want to show you how to use the fabric.
+I like the fabric of the fabric.
+I like it.
+I can see the fabric of the fabric.
+I like the fabric of the fabric.
+All right, we'll get started.
+Welcome back.
+Thanks for bearing with me last week while I was away on business.
+as a reminder if you wanted to see your midterm
+talk to me during office hours we're having normal office hours
+tomorrow remotely
+but if you're in the classroom today it wasn't too big of a sack
+so I grabbed them all so if anybody wants to see it at the break let me know
+we can have you take a look at Ben
+the
+I don't know
+Midterm was a little bit, I think I was a little surprised at the results, so please let me know if I can help in any way.
+I'm trying to plan to do some review over the next few weeks.
+We're on week eight, so we have three more weeks and only two more weeks of new material that I'm going to cover,
+so that means we'll have at least one whole class.
+I might throw in some stuff about Java somewhere in here.
+Java concurrency, which I've been wanting to talk about for my 447 classes.
+So I might try to see if I can squeeze that in.
+But if there's specific topics that you want to let me know about in Discord or email, let me know.
+If you want me to try to cover.
+I'm also going to go back and look at the midterm.
+I didn't have time this week, but I'm going to go back and look at the midterm results.
+I kind of posted like which categories of questions people struggle with.
+So I'm going to try to make sure to cover some of that as well during the review sessions that we do.
+Because, you know, I want you to succeed.
+So please, you know, if you have specific questions, come to office hours, either before class here or on Zoom on Wednesday.
+And I'm happy to work through anything there.
+There was an announcement I sent out last night about the CS program assessment.
+So CDM School of Computing likes to at this time in the spring with the 447 classes evaluate the program.
+So they're looking to see how effective the program is.
+So the questions that are on the quiz that I published, they're not graded for the course,
+except if you do the quiz, you get two points at the end added on to your final score.
+I normally haven't been doing extra credit lately but I wanted to give you an incentive to do it.
+It does help the school figure out how we might need to adjust the curriculum.
+So please do that.
+You'll get two free points on your final calculated grade.
+Just remember that even if you're on the border and your final exam score is below 60%,
+you're not going to get a C minus.
+So that's per the syllabus.
+I did edit the syllabus to just remove the line that says there's no extra credit, and I changed it to just add that little bit there.
+I just changed that one paragraph, and that's just to keep the syllabus in agreement with what we're doing.
+So I didn't know that I was going to be doing that until a couple weeks ago, and then they asked me,
+and they said I didn't have to offer extra credit, but I do want to provide an incentive for you to do it, so please do it.
+It does help my colleagues who figure out what the curriculum is going to look like.
+So that's that. So that will be due on Friday, June 5th at 11 59 p.m.
+So you have up until the end of last week of class to do that.
+Really the weekend before some of you who are remotely be taking the exam before that,
+but I just want, you know, those of you who are planning to take the exam like during finals week,
+Monday, Tuesday, that you're focused on that for the weekend before and you're focused on studying for the fun week.
+So try to have that done as soon as you can, worked at it.
+Alright. Any questions on it?
+I put it on D2L, I send it out e-mail.
+Alright.
+Do you have a question? No. Oh, I saw you moving.
+Did anybody have any questions on the homework
+that we just did for this week?
+I haven't looked at it and I didn't set up my machine. So today's going to be the day somebody has a question.
+It was a busy weekend because I was traveling after my business trip.
+I had a wedding, so it was just crazy.
+Anybody?
+All right.
+How about why don't we start with a quiz then that was due today
+and then that'll be our warm-up.
+All right.
+Oh, there was one question too on the worksheet,
+and I want to just share that.
+So let me do that quickly.
+Somebody pointed out to me that one of the solutions for the dangling pointer question
+or the solution for the dangling pointer question was kind of a little incomplete.
+So, if we look at this, the actual, this is the C program here that we're referring to here.
+So the first one is OK because this is the worksheet from last time.
+When we call foo, we get a new activation record on the call stack,
+and we allocate space for that new integer.
+And we then take whatever we got for N, we multiply by 2,
+and we store that value in there.
+And then we return a copy of the result.
+So, we're actually updating that memory location that result refers to,
+to contain that two times n value.
+And then we're returning a copy, a bit-for-bit copy,
+back out into the receiver of the call.
+So actually that's not the right word.
+The receiver, I forget that, I'm using that word incorrectly.
+The receiver is who is actually called, so forget I said that.
+So, the assignment that happens here, there's a new location, x, on the call stack for main that is going to get a copy of the result, right?
+So, bit for bit copy.
+The next thing down, though, we have this function foo, and this function is returning a pointer to an integer.
+and it's returning the address of the result that we have computed here and stored on the call stack
+in that stack frame. And that address, once this invocation of foo exits, that address is no longer valid.
+It doesn't point to anywhere. So it doesn't matter if you call it here or and or call it here.
+both of these end up being dangling pointers.
+So the question that the student asked was,
+well the solution just says that P is a dangling pointer.
+What about Q?
+And of course, Q is also a dangling pointer.
+So if it's true for one, it's true for the other.
+It's the same thing we're looking at.
+It's the same reason.
+Okay?
+So I just wanted to point that out.
+All right, so here's our quiz.
+So, this quiz has to do with L values.
+I just remembered I'm on call, and I don't want to be interrupted, and my boss knows that I'm going to go on air.
+So, you don't need to be interrupted in the class for this.
+They're very cool with that.
+All right, so, here is the first question.
+So, the question asks, is star P an L value in C?
+And here's the context.
+So, here's the coding app.
+Do we think, I mean, you all took your quiz, and you all hopefully saw the answer,
+But let's just review.
+What is star p?
+Is this an L value here?
+Yes.
+Okay, good.
+The big clue is that it occurs on the left side of an equal sign, right?
+So that means we're writing to that whatever p is pointing to.
+p is a pointer to an n.
+So it's pointing to some location in memory somewhere, and we're writing there.
+So that's an L value.
+So that was true.
+The next one.
+Star p plus 16.
+I did not review these questions.
+So let's hope I get them right.
+Star p plus 16, is this an L value, let's see.
+What do we think?
+Sure.
+All right, Matt, you wanna tell us why you think so?
+We're just doing pointer arithmetic.
+So if p is a pointer, you're adding 16 to it,
+that points to a new memory location and then you're de-referencing that
+location. Right, and then presumably if you had it so you don't actually have that expression
+on the left side of an equal sign, but if you did, you could write to that memory location
+that you just talked about. I had a student one quarter like, well, that doesn't occur
+in there, so the question is bad. And I'm like, well... The ellipses are for it. That's right.
+There you go, yeah, that's your out, right?
+So it could occur there.
+And so I think the way to think about this is this code here is giving you context, right?
+It's giving you enough information that you can make a determination.
+I think I ended up telling the student that we just would, I thought about changing this
+word is to could be and then it satisfied the student.
+So they were just very pedantic about language.
+So next one, all right, so the expression &p is an L value in C,
+and we have this same context here and my mouse is hovering over the ampersand L.
+So is &p an L value in C in this code?
+I'm seeing a head go like this.
+I agree with that.
+Anybody want to tell me why?
+Does it make sense?
+It's just a number value of the address, like it's just a-
+a number. You can't write to a number.
+Right, you're getting the address of something, and you can't assign the address of something
+to be something else because it just doesn't make any sense, so the answer here is going
+to be false. This time we have the expression x, and this is Java, so this is slightly different.
+What do we think about this one?
+L value or no.
+And surely you can just tell me what the quiz told you
+but then when you submitted it,
+let's talk about the y.
+Is this an L value?
+Is x and L value?
+It is an L value because we are taking it as a parameter.
+So, did you say it is or it's not?
+It is, it is.
+It is, okay.
+So I agree with that.
+What's happening here is when you call f, and of course,
+we don't actually have a call to f.
+But when f is called, the only occurrence of x here
+is in this f function.
+And in order for us to execute this function,
+we have to have some value in x, right?
+And in order to get that value in there, we copy that in, right?
+So x ends up being .
+That's my contention.
+And I think we're agreeing.
+So I'm going to say true and then hope we're right.
+I'm assuming somebody's checking, like,
+and making sure that's what the quiz answer was.
+OK, next one, x.next5, subscript 5,
+is an L value in Java.
+So x.next.
+So here x is going to be a reference
+to a C to an instance of a class C.
+And so we can refer to dot next because it's not private or anything.
+We can just say x dot next.
+And that's an array, so we're just accessing the array at element 5
+or I guess the sixth element because we're zero indexed.
+But can we assign to that?
+That's really the question.
+Yes?
+Yeah, so it's perfectly valid to say,
+within the function f to say,
+x.next subscript five with an equal sign after it,
+and update that memory location, f.
+Something else.
+This one, how is this different?
+Oh, x.five, sorry.
+x.next subscript 5.next after that.
+So is that an L value?
+Could you assign to that?
+Yeah.
+I agree with that, right?
+So x.next subscript 5, you're gonna point to a c,
+and then a c has a next array.
+So that's the whole other array.
+You've accessed one array to get to the fifth,
+to the element at index five,
+that is gonna be of type C or it could be null,
+but you could then assign to that things next array.
+What happens when this Java program is executed?
+So do we have here.
+This is that example I had where we were simulating a reference,
+simulating a reference, or callback reference, I guess.
+So here, in our main program,
+we instantiate a new int ref and we give it value two.
+We instantiate a new c, and we pass that int ref into c.
+So now c, R, is going to point to that.
+And then we call f of C.
+So here's our f, and then this is going to change r
+to have a new int ref.
+So I guess the question is, what happens
+when this program executes?
+So what do we think happens?
+Do we crash because of a null reference error?
+Let's first eliminate that, right?
+So if we think about it,
+so if we call the constructor,
+we put 2 in there for n, okay?
+And then we instantiate a C,
+passing that instance of intref, okay?
+And then we call f of C.
+So we call f of C.
+We're not leaving anything null.
+We're saying c is r,
+so now we're updating this intref here
+to get a new value.
+And so c dot r dot n should be valid, because we have a valid r here.
+We instantiated this, so we had this thing.
+I should actually maybe draw, I could draw it if it helps.
+So like when main executes, we have an int ref and in our int ref we have an n, and it's
+going to be equal to 2 and our main has this s pointing to it.
+Okay, and actually maybe it's better if I give myself a little more space because I'm
+So I'm going to have my main, this is my call sac.
+I have S, and S is pointing to that thing on the heap.
+And then I have a new C that I've allocated.
+So I'm going to have a C.
+And so we're going to call that C.
+And C has an int ref R.
+Right?
+That's what we get when we first start out.
+And now we're gonna call F of, we're gonna pass C to F.
+So when we call F, we get a new stack frame, right?
+And we have a C inside F.
+So we have a C, C, and it's going to get that same inref.
+So everybody's pointing to this thing.
+And now the code executes.
+So C.r is going to get a new inref.
+So C, oh, you know what?
+I drew that wrong, right?
+my mistake. Let's fix that. C is not pointing to inref. C is pointing to a C. Otherwise,
+it wouldn't compile. It has to point to the right type. Sorry. So now we're in there. C.r. So C.r
+is now going to point to a new inref. So we're going to create a new inref.
+It's going to get an n, it's an int.
+And that's going to get the existing c.r.n times 3.
+So I haven't changed the pointer yet, notice I'm instantiating this thing.
+c.r.n is 2 times 3 is 6, so then this will get a value 6 in here.
+And then the last thing is we have to update this pointer because we're doing that assignment.
+at line 13.
+And then we get back all the way out to main, so this goes away.
+F exits and now we print out S.n times C.r.n.
+So we should print out 12.
+Does everybody see that?
+So S.n is 2, C.r.n is 6, so 6 times 2 is 12.
+So the answer should be plus any line.
+Alright, does everybody see that?
+That was too much to do in my head.
+I ain't gonna dry that out.
+I mean I could probably have done it in my head
+if I weren't talking through every detail of it.
+Next one.
+So what is the result of evaluating
+the following scholar code.
+So our first thing, we have a line one.
+We have a var y that's gonna get the value 10.
+And the next line down, what is that on line two?
+Is that a, the type of that Fs, I mean it says right there.
+But what is that, how do we say that in English?
+It's a list of what?
+Fs is a vowel, it's a list of.
+Functions that take an integer and return an integer.
+Exactly.
+So whenever you see this arrow, you're dealing with a function.
+All right.
+So our list of functions, we have one that takes x plus y plus one,
+sorry, takes x and returns x plus y plus one.
+The other one takes x and returns x plus y plus two.
+And what's the y here, in this list of functions,
+what y is it referring to?
+Okay.
+The line number one.
+The one on line one, right?
+It has to be, right?
+So it isn't always going to return the same thing because you might change that var y to be some other thing.
+It's a var, right? You can change it.
+Okay.
+So then we have this for comprehension.
+So we have for each of these functions in the list of functions,
+and for each y in this list of 0 and 1, we're going to yield f of y.
+So now this time the y is gonna be different than that y, right?
+Cuz it's a new occurrence of this variable that doesn't relate to the other one at all.
+So our two values of y for this y are 0 and 1.
+For each one, we're going to call the function that returns what those things are for you.
+So actually, I don't believe this y is actually ever going to change in our code.
+Does everybody agree with me, even though it's a far?
+This y up here is never going to change, right?
+Okay.
+So, 0, 1.
+And we're going to execute two functions.
+So we should have how many elements in the end?
+Four, right?
+So that immediately, well, it doesn't, well, it eliminates this,
+because we don't see any print lines, right?
+There's no print line.
+All right.
+So what happens?
+So we get zero and one.
+So zero plus 10 plus one is 11,
+and then 0 plus 10 plus 2 is 12,
+so we should get 11 and 12 first.
+Okay, so now we've got to just figure out
+which one of these two it is.
+So then for 1, we get 1 plus 10 plus 1
+should give us 11 again.
+Sorry, 1 plus 10 plus 1 is 12, sorry,
+should give us 12 again.
+And then 1 plus 10 plus 2 gives us 13, right?
+So, it should be this one here.
+I think what this one can do, is throw you a little bit, because this var y, you might
+be tempted to think that y might change.
+But this y here is bound to these, and the scope of this y is in this expression.
+Here's a C program, and so we're asking what happens when the C program is executed.
+So let's talk through it.
+We start off in our main program with x getting the value 5, and then we're going to have
+to that location on the call stack, that x location.
+We're gonna take the address of x and we're gonna store it in p.
+And then we're gonna call f of the address of p and
+that will give us, since that is a pointer to an int,
+you'll get a pointer to a pointer to an int.
+That's why you have the double star here.
+Always in c fun when you start seeing that.
+I get this in Rust sometimes now too.
+I'm working with Rust, so I'm starting to...
+My eyes are popping out,
+because I have to do these dereferencing things
+in my head again.
+Okay, so then we're saying,
+okay, I'm gonna set q equal to null,
+and what is the, okay, oh wow.
+So we're gonna have our address of p set to null,
+and then, is that gonna work?
+Did anybody try it?
+I don't remember what this one does.
+It doesn't do anything?
+It doesn't do anything.
+Yeah, in the function f,
+setting q equals to null has no bearing.
+No effect.
+There's no effect right?
+It's not changing or accessing what q is actually pointing to.
+It's just setting the local copy of q and all, and then returning.
+Yeah, that's right.
+It's the local copy of q.
+That's right.
+Right, right, right, good call.
+Would help if I had to looked at this last night, but
+I would have concluded the same thing.
+Okay, so then down here, we're gonna change what P is pointing to,
+to first we're gonna dereference P.
+So we're gonna get 5 plus 1, we're gonna update P to contain 6.
+And then we're gonna print that.
+So we should get 6 printed.
+So I think the answer is the second one.
+I mean, technically it won't compile.
+Will it not compile?
+Because there's no quotations around the argument to printf.
+Oh, look at that.
+Same thing on the next one, if I remember.
+Okay.
+Good call on that, too.
+Okay.
+That's not an answer.
+So you have to pick the best answer.
+So that's why, whenever you see, pick the best answer.
+No one called me on that one yet, or maybe I changed the quiz.
+Sometimes I reimport the quizzes and I don't always read everything.
+It was missing in the one that I took.
+But since it wasn't an answer choice, I figured it was an accident.
+Right.
+So did you actually try to put this into a file and compile it?
+I probably wouldn't have.
+I didn't, I mean to make this sound the wrong way, but I didn't need to.
+I just, when I was reading through it, I just ...
+Yeah, I feel like this is just because probably sorry to hear you know that and
+you're just like, yeah, I see.
+Okay, I like it, we'll go with that.
+I'll probably make a note to fix the quiz.
+Because we should add the quotes back and make it compile, at least.
+All right, same thing here so
+probably ignore this missing quotes right, as Matt.
+This is, say again.
+The third line is different from the previous one.
+The third line?
+In the, sorry, the 10th question.
+I don't follow what you're saying.
+You're saying the third line is different.
+The 10th question, we are using the third line.
+We are updating the pointer, if I believe.
+So, it shouldn't be six, that's what I think, for the 10th question.
+Well, let's talk through it, so.
+Sorry.
+We got five.
+And then we're going to create a pointer p and get the address of x, and put that in
+p.
+We're going to pass the address of p in here.
+And this, again, will have no effect, right?
+No.
+It'll cause a crash because it's actually setting what q is pointing to null, so it's
+setting p to null.
+Well, the difference is this here.
+Here, in the previous question, Q is equal to null.
+In this question, we're saying the thing that Q points to is null, so you're trying to
+change this, and that's not valid.
+And so it will crash because it's trying to, like, pack your call stack or something.
+Well, no, it'll just crash, I think, from a null pointer.
+Like, when in the line, in line 10, when you then try to dereference P and add one to it,
+it will be set to null.
+So it'll try and dereference a null pointer.
+Makes sense.
+Everybody follow that?
+Yeah, so the difference here that you were trying to point out is this here.
+So here, Q was just created on the call stack here.
+Q is created on the call stack here, but it's a pointer to a pointer to an int.
+And just like it was here, but here you're actually trying to, you're dereferencing Q
+and setting it a null which will affect, will try to affect this.
+And this was an address and you can't really change the address.
+Which is what I thought it was that when you're dereversing Q,
+you're essentially, you're getting P and so then you're setting P equal to null.
+And so then when you exit the function and you try to reference the value
+P is pointing to, P is now pointing to null.
+Like it lets you do it, but then in line 10,
+you're trying to dereference null to add one to it.
+You can't do that.
+Well, so this, so what this is doing here, so what this is doing here is
+getting the address of not it's not, how do I explain?
+So, this P is pointing P itself is pointing to someplace in memory,
+and you're now getting the address of the pointer,
+which is not what p is pointing to.
+It's the separate location that's storing the pointer.
+I think we're maybe saying the same thing.
+And then that goes in as a pointer to a pointer to an int,
+and then you're trying to dereference that and update it.
+But that's...
+Right, so if you're dereferencing q, that's p, right?
+If q is pointing to p, which points to an n,
+if you dereference q, you've got p.
+Right.
+I think I followed you.
+And so then, instead of pointing p at some other valid integer value,
+you're pointing it to null.
+I'll type it in.
+Let me see.
+The only thing I have to do is add I think this.
+This is why we hate C. It compiled.
+Oh.
+Ah.
+Yeah, core dumps.
+So you end up with an error.
+It's a null pointer error, essentially.
+It's trying to dereference what you've set to null, right?
+Yeah.
+That's what you were saying before.
+Right.
+Don't be afraid to type these in.
+Yes, I agree with you, you're right.
+Okay, last one.
+So, what happens when this program is executed?
+In our main program,
+we have creating a struct S and
+then this is going to exist on the call stack and
+on the call stack, and then we're going to take that new struct that we've created,
+and set its x equal to 1 and its y equal to 2.
+And then its p equal to the address of this location here, where the x is being stored.
+Then we're going to call f of s, and then we're going to, inside here,
+we're gonna change s.p to be the address of s.y.
+And then when this returns, we're going to call printf here.
+We're gonna dereference s and print that out.
+So what do we think is printed?
+Think about it for a second.
+I think the answer is one.
+Does everybody agree?
+Yeah.
+Does anybody want to explain why?
+I think I know why, but...
+I ought to know I'm a teacher.
+I would say it's because when you call F, it's making another local copy.
+Bingo, so yes.
+Everybody agree with that?
+Mm-hmm.
+It's actually copying the struct.
+And we're used to Java land where in Java land or Scala land,
+that would pass a reference to a thing.
+And so we'd be operating on the same memory
+inside this function.
+But in C, that is not what happens.
+You are actually copying a whole struct
+into a separate copy of that struct.
+And so when you change this here,
+you're just changing that copy, you're not changing the original.
+So we think it's going to be 1.
+All right, let's find out how we did.
+11 out of 11.
+Okay, so we did it.
+So yeah, the hardest part,
+the hardest one that I had to explain,
+the one that tripped me up the most was this one
+because once you start seeing these,
+your brain starts to go explode
+because you have to dereference,
+and you have to like,
+you could almost like,
+you probably could draw it out,
+and then I might try that later,
+just draw it out and see like,
+if,
+I've already convinced myself
+by talking through it with you,
+but I wanna see it like pictorial.
+So, all right.
+Awesome.
+Alright, so we're going to spend, let's see, it's been about a little more than a half
+hour.
+So we'll spend.
+Why don't we, I'm thinking the best thing to do is to start with the new material and
+then we'll just reserve the end of class to just cover like review material.
+It might be a little lighter, too, because some of the stuff we're gonna get into, the
+subtyping gets a little heavy.
+one of the topics in there is covariance and variance,
+that stuff can sort of make your head explode a little bit.
+So why don't we start with that, with the new stuff?
+So we're going to start by talking about
+inheritance and dynamic dispatch.
+So context here, we're talking about code sharing
+between classes, and we're asking questions.
+What should happen when methods have the same name?
+So we'll talk about classes and inheritance,
+and we'll identify the difference
+between static and dynamic dispatch.
+This is actually one of my favorite arguments, too.
+Okay, so in Scala, we have code like this.
+We have an animal class, we have a bird class
+that extends animal, we have another cat class
+that extends animal.
+they each have their own toString method.
+And we have this array of animals
+that contains one bird and one cat.
+And then for each animal, we're going to call toString.
+So what gets printed for each one?
+Bird cat.
+Yes, so the output ends up being over here, and then this is the Y.
+So X is going to have a static type animal.
+What does that mean?
+It means that the time that the code is compiling, the compiler says, well, the type of X is
+the type, I'm sorry, the type of X is the type that's contained in the array, statically.
+So statically defined its animal.
+Even though the compiler can see you did new bird and new cat, it doesn't pay any attention
+to that.
+So it has static type animal, dynamic type, or otherwise known as runtime type, is going
+to be bird and cat.
+And that's because you actually have a bird on the heap and then you have a cat on the
+heap in another location.
+And so the zero element is that concrete bird instance at runtime, the runtime type.
+And the next element is that concrete cat instance at runtime.
+So we call this when we're, what's happening is we're
+dispatching to the toString method that
+is defined by the dynamic type, by the runtime type.
+So we call that dynamic dispatch, or late binding.
+It's binding at runtime, it's not binding at runtime.
+time. So then for Java, what gets printed for Java? What do we think? Same, yeah Java is going to do
+the same thing. So same thing, bird and cat, static type animal dynamic type bird
+cat, and then we have dynamic dispatch late binding. So we'll use the dynamic
+type or the runtime type of the object. Okay plot thickens. C++, what do we think is
+going to get printed here?
+Anybody want to guess?
+You think it's the same or different?
+It might just be animal, animal.
+Don't you have to mark functions as virtual for that to work in C++?
+Yep, exactly, we'll get to the virtual thing in a second.
+So Matt is correct, the result is gonna be animal.
+Animal, x has static type animal, same idea here.
+The dynamic type is the same idea, bird and cat, right?
+But C uses, sorry, C++ uses static dispatch,
+and that means we bind which method we're calling,
+which, sorry, which function we're calling,
+member function, I think, is the proper term for C++,
+which code is actually executing is determined
+at compile time and not at run time.
+So we're gonna use the static type of the variable.
+The compiler will do that.
+So this is why we get animal, animal.
+So then Matt informed us there's this thing called virtual.
+I remember learning virtual a long, long, long time ago.
+And I remember then learning Java after learning C++
+and learning that all methods are virtual in Java.
+And that was our way of saying that the behavior
+that we got in Java, the dynamic dispatch that we were getting,
+was happening.
+And it was similar to, it was the exact same behavior we get with virtual methods in C++.
+So in C++ here, we have the same idea here.
+Bird and cat, we iterate through and we call the two strings.
+And we should get this time bird and cat.
+So x has static type animal and dynamic type of bird and cat.
+So the dynamic type is still the same idea.
+It's, that's the type that occurs at runtime, that's the type that exists at runtime.
+So C++ dynamically dispatches virtual methods, and this is only going to happen when objects
+are accessed with a pointer reference.
+So just because it's virtual is not enough to give you dynamic dispatch in C++, you have
+to be using that arrow there.
+If you were using, instead of a pointer, you were using a x dot two string,
+you would get a different solve.
+And that's what we have on the next slide.
+So here on the next slide, we have a bird and a cat dynamic types.
+And static types are animal.
+But because we're using the dot here, we end up.
+Oh, I guess I am wrong. I said that wrong. I lied. Dynamic type is animal. So the compiler
+is doing something like truncating object, meaning in memory it only knows about animal,
+and so at runtime even though you have instantiated a bird and a cat, ah, right. So because this
+is a bird, and because this is a cat, you're constructing those things, but they are being
+referred to as animal types. And that's because we don't have a pointer here. My C++ is very
+custom. So this is, yes, truncating the object. So C++, this is also called coercing to the
+parent class. So at runtime, the runtime only sees the animalness of it, not the
+birdness or the catness.
+Which object are we accessing when invoking G and F in line 4?
+So which object are we accessing?
+So we have our x is in a, we constructed in a, and we call x dot f,
+this is Scala, by the way.
+Just you can tell from the syntax, right?
+We call x dot f with a two, and what object are we accessing?
+There's really only one choice.
+It's this A, right?
+There's just an A. The question is a little bit weird.
+It's building to the next couple slides.
+So if we look at this at runtime, we call X.F2.
+We'll print out A.F with a 2.
+And then since it's not 0, we'll call F of X minus 1.
+So then we'll call F with 1.
+Then we'll print A.F1.
+And then we'll call it again.
+we'll hit this one and we'll call f . And we'll print f and then x this
+time will be zero so we'll call g. We'll call g and print a . So that's the
+output. So it's just the object reference by x. Is there an explicit
+name for that object? So out here we have a val x and we've instantiated
+and x is referring to that a, but inside the code here,
+we have a different x, it's not this x,
+so is there a name for the instance
+that we're executing within?
+I'm sure you've seen it before.
+This?
+This, exactly.
+So.
+This.
+So what are the static and dynamic types of this?
+In this case, it's only A,
+because we don't have any class hierarchy.
+I know when I was looking at these slides,
+I had to look ahead.
+I was like, what, you'll see.
+So if we look at that output at runtime,
+notice it's referring to this here.
+So A dot F of two,
+It's going to print a.f of two, and then it's going to call f of one and
+then print a.f of one.
+And this is just showing you that this.f is commenting what it is.
+Yeah, it's calling this.f, right?
+And then a.f of zero, it will print that and
+then we'll call g, and then this.g.
+So it's just there's only one thing that can possibly be this here.
+So the reference to this has static type of enclosing class and
+here it's A, and the dynamic type of the actual object that exists on a heap at runtime.
+Okay, now the plot thickens.
+We have a class B, which is a subclass of A.
+Okay, so.
+If I have a new instance of a b and I then call f on it,
+if I call x .
+There's only one possible implementation of f, so there's nothing to worry about here.
+A.f of 2 will get printed.
+And then we will call this.f of x minus 1.
+So print this one.
+And then we'll call recursively again with 0.
+And then we'll call...
+Finally, when we're at 0, we'll call this.g.
+And notice what gets printed is B.g, not A.g.
+And so the difference is that
+This is always going to refer to the dynamic runtime type.
+It's not really a difference.
+The prop, the situation here is that this will always refer to the dynamic type,
+the runtime.
+So X will have static type B and dynamic type B.
+This at line four has static type A.
+And dynamics type B.
+So the compiler in order to resolve the call just needs to.
+You know, it thinks about this as if it were a compiler.
+But at runtime it dispatches to the other one.
+That's defined in some place.
+So now static and dynamic type of this.
+So what are the dynamic,
+static and dynamic types of x and this.
+And I think it's referring to that x over there.
+So what happens?
+So the output at runtime is going to be calling x f of 1.
+So we have a b, and we call f of 1.
+So we should get b dot f of 1, that looks right to me.
+And then we're going to call this dot f,
+so we're going to recursively call.
+And this is just going to infinite loop.
+So we're going to see that?
+We're never actually decrementing x when we call.
+We're never getting up there in that other code.
+So the reason why is because x has static type a, dynamic type b.
+This at line 4, static a, dynamic b.
+This at line 9 is static b, dynamic b.
+So we're never getting into that.
+Functions or the methods that are defined in A.
+So how do I access a method in a super class?
+So the answer is there's this super call.
+So if we look at this one, what happens?
+So our output at run time is going to be b dot f of one.
+So we call the f that's defined on b, so b dot f of 1.
+And then we call super dot f of x.
+So if we call super, we're going to go to the super class and call 1 in here.
+So then we'll print a dot f of 1.
+And then we're not 0 yet, so we'll do this dot f of 0.
+And this dynamically will dispatch over to here.
+And so then we'll print b.f of zero, and then super.f of zero.
+So we'll get a.f of zero output, and then x is zero, so we'll call this.g,
+and it will dispatch to the runtime type, the implementation of g for the runtime type.
+So we'll get b.g, and the whole thing will exit.
+So x has static type A, that's over there.
+And note the difference here, x has static type A, so it doesn't have static type B,
+but that's immaterial because it will dispatch dynamically to whichever one exists at runtime,
+whichever type it is at runtime.
+So x.f selects b.f.
+Super at line 8 explicitly requests the F of the super class.
+So that's what the super keyword means.
+This is actually the same thing as what we have in Java.
+The super and this as well.
+This at line 4 has static type A and dynamic type B.
+So this.f selects B dot F.
+So code modularity and reuse.
+So for OOP, we have classes with inheritance and overriding.
+So we're used to this from Java.
+We have class A, we have class B extends A.
+We can override the F that's defined here.
+We can override the G that's defined here.
+The keyword override could be used here, as long as the method signatures are the same.
+In functional programming, we would use functions and pattern matching.
+So here our f does this match, and it actually checks to see, well, do I have a b.
+You can actually use this syntax here, I have whatever of type b.
+That's what this means.
+And so I've matched on that, and then it will print this,
+and then call the base function down here.
+base A of x.
+So this is how you do.
+So what you get for free, which you're
+used to getting in Java and Scala when
+you do this kind of thing in functional programming.
+And you have to use pattern matching to do that,
+to get the same a.
+So should we let programmers specify how classes
+can be instantiated?
+Should we let programmers decide which methods can, must, or cannot be overwritten?
+So, here, if I try to instantiate an a here,
+because it's abstract, it's not allowed.
+So the compiler will throw that, will throw that back at you and say no.
+What about this abstract method?
+So, if I try to, if I have an abstract class a and I have this abstract method,
+the way to know that it's abstract.
+I think you have the abstract keyword on a def,
+but if you don't have an equal sign,
+then you know it's abstract.
+So there's no method body for g.
+You try to instantiate a b.
+I'm sorry, you try to define a class b that extends class a.
+This is a concrete class, and you're not
+providing any implementation for g.
+So this won't work.
+You must override g and b, or b has to be abstract.
+you have to declare it as such.
+And then over here we have in our abstract class A,
+we have a final method f.
+And in b, we're extending a, we're trying to override f.
+So we have an abstract g, which we try to implement here.
+But we try to override the f that's defined here.
+This won't be allowed.
+You're not allowed to override f because it's declared final.
+So in software engineering, we have something
+called a template method pattern.
+I find it very interesting that I
+work with people who have never heard of some
+of these design patterns.
+There's the old gang of four set of design patterns,
+If you have ever taken any software engineering classes,
+you may have covered some of these.
+But with functional programming,
+you generally don't need them anymore.
+This is why some of my coworkers
+who are more functional programmers
+from their college time,
+they have never heard of design patterns.
+They're like, what's a design pattern?
+And I'm like, oh my.
+Fast forward 20, 30 years from when I got out of college.
+I'm like, okay, they don't know design patterns.
+And this was in the 90s.
+We all had to learn these because there were job interview questions all the time.
+So in this design pattern, this is called the template method.
+Basically what it does is defines the skeleton of an algorithm,
+but it has varying steps delegated to some classes.
+So this is actually the UML for this.
+I don't use this, all the different color codes and the diamonds and stuff.
+But you look at this code, what's going on?
+And it's easy to recognize for me, as the minute I see,
+Even though it wouldn't have this name normally,
+I could see code like this and go, oh, that's a template method.
+So the template method executes step one and
+some operation in between step one and step two and then it does step two.
+And notice, it's got step one and step two are defined as part of this class.
+But operation one is abstract, and so when you create a concrete class,
+you have to actually provide the details on what the implementation of
+operation is. So this is a template method and then parts of the algorithm are
+delegated out to subclasses. So you put the common behavior in a base class and
+that helps you avoid code duplication and then the structure of the algorithm
+is implemented once and then the things that vary are put in subclasses. In
+In functional programming, how do we do this?
+We just use higher order functions.
+So you can think about in functional programming,
+you would have some function that's doing this.
+And this operation one would be some function
+that you passed in that had some type, right?
+A function can have a type or has to have a type.
+It has some indication of what the parameters of the function
+are and then what the result of the function,
+the type that the result of the function conforms to.
+So you would pass in operation one.
+It would basically return.
+It would take nothing and return nothing.
+So in this case, it's somewhat doesn't make sense.
+You would probably have data involved, some data type.
+All right, so here's our summary.
+Inheritance is letting you link classes
+statically at compile time.
+And if you think about it, when you
+define a class and then you extend a class you're basically saying that a
+class B like that extends class A is related and this relationship is defined
+at compile time it's defined statically and we have static and dynamic dispatch
+so static dispatch is early binding at compile time so we saw that was c++ and
+you would select the method that's called based on the type of the reference
+So the type in the source code.
+The dynamic, and actually the type of the reference
+in the source code, not the type of the thing that's actually
+instantiated, which you can read and see that,
+but it's going to be the type that variable that ends up
+holding it is.
+Dynamic Dispatch is late binding at runtime,
+and you select your method based on the type of the object.
+So this design patterns often provide object-oriented
+Solutions for Functional Paradigms.
+This is what I was getting at,
+was a lot of my coworkers who are more functional-minded
+don't talk about design patterns anymore
+because that was an object-oriented development
+sort of concept.
+And we didn't really have a lot of functional programming
+in the wild and industry until 15, 10, 15 years ago.
+A Gang of Four is this book actually.
+I think, is this first thing.
+I have this book on my shelf.
+If I felt like carrying an extra heavy book,
+I would have brought it down.
+But this book here,
+it was all the rage in the late 90s.
+A gang of four of these four people who wrote the book.
+There are versions of this in Java,
+by different authors,
+but you can do the same design patterns
+And so you may have seen this.
+And this was 1994, so I was actually still in college when it came out.
+And they emphasized this idea of favoring object composition over class inheritance.
+And what does that mean?
+And well, if you have, really all that means is instead of doing something like.
+If you have like.
+Class A and class B, this is UML.
+This is the most common UML I use.
+So you're defining class B to be a subclass of class A,
+that's what this means.
+Using composition would mean that you have a class A
+with a reference to a B. And you would have some other class B.
+And this is using different features of the language,
+whatever language you're using.
+You're statically defining this relationship here.
+This is a more dynamic relationship.
+But what you lose is you don't get the this and the super.
+I mean, you can have this, of course.
+But you can't get the super.
+You can't call this dot something
+to get an implementation over here.
+You can't extend things over here.
+There was a, when I taught data structures one,
+or data structures.
+Did I do it in data structures one or two?
+I think I did it in data structures one.
+I added something with backtracking
+from my undergraduate textbook, which used this sort of
+approach, which was in the 90s.
+This was very common for us to define code this way,
+using the features of object-oriented programming
+using inheritance.
+I opened up my textbook.
+It was my favorite assignment from my undergrad,
+but I still remember.
+And it was a backtracking assignment,
+and they had this whole framework for backtracking.
+I started reading the code, and I was starting to convert it.
+Like I was writing it in Java,
+And I was like, we wouldn't write this this way today.
+Like in 2023, or whatever it was, when I did it in 2004.
+We would do this.
+We would do this composition idea.
+We would have other classes and refer to things and call methods on the other classes rather
+than try to bake it into a structure like this.
+So I ended up creating an analogous structure using composition instead because I was much
+more modern, and I've been through at this point 30 years of software engineering.
+And we all move this way.
+We used to ask composition versus inheritance on job interviews.
+We would have been interviewing people.
+So that was still like probably 20 years ago.
+That was a big shift that was going on.
+The Design Pattern Catalog, let's see...
+I haven't actually seen it.
+So this is, I guess, a catalog.
+I have seen this once before.
+you can look inside the catalog, you can see it's history of the patterns.
+So these are the standard gang of four patterns. Some of them I know better than others.
+Decorator, Composite, Singleton. Singleton is, we get that in Scala with an object,
+right? We get that for free with an object. Factory method, Abstract Factory,
+Adapter's one of my favorites I've used.
+And then design principles.
+Oh, okay.
+So this is Bill Venners, who I met once.
+He wrote Scolatest.
+I met him in a conference, probably about 12 years ago.
+Nice guy.
+He interviewed Eric Gamma, who was one of the Gang of Four authors.
+I can read that if you want.
+Okay.
+So, we have a couple more slides here.
+Let's just kind of talk through some of these.
+So, if I have an interface fn, that just means function, right?
+And I have an apply method that takes an int and returns an int.
+I can do lambda notation in Java.
+So that's what this is here, right?
+So I have my array of functions.
+So I'm instantiating that array.
+And then I have this j here, which is going to get i plus 1.
+And then I'm going to define a function using a lambda.
+This is a lambda that takes an x and returns x plus whatever is in j.
+So that function will be defined that way.
+So this is what we see in Scala.
+we see the equal sign or they call it the thick arrow, I think.
+And this is the skinny arrow, right?
+Or fat arrow, they call it fat arrow and skinny arrow, something like that.
+So Fs sub i has static type fn,
+an anonymous dynamic type of x arrow, x plus j.
+So this is an anonymous function.
+Anonymous classes, so this is like going back in time in Java as we go this way.
+What we're doing here is, we're saying the same thing.
+We're saying I'm going to instantiate a new FN and
+I can instantiate the interface as long as I provide the implementation as part of it, right?
+So this is an anonymous class, they added this to Java 1.1 I think.
+And this means the same thing.
+So I have an apply method that takes an x and returns j plus x.
+So this is the implementation function.
+It means the same thing as this.
+This is a nice little shortcut.
+So FS sub i, a static type fn, and
+the anonymous dynamic type of whatever this expression is, new fn.
+And then we have explicit classes.
+So Java 1.0 didn't allow even this,
+this wasn't allowed yet.
+This in Java 1.0 was how you had to do it.
+You had to explicitly define whatever your classes were going to be that
+implement that interface.
+There was none of this.
+You couldn't do this open brace here and define it right there.
+So here we have two implementations.
+we have two functions here, right?
+So this one takes x plus one,
+this one takes x plus two,
+or returns x plus one, returns x plus two.
+And then you have to assign them that way.
+So next week, we're going to talk about nested classes.
+I think I moved that to next week.
+But what's kind of interesting here is that Java has actually created, I think, I can't
+remember all the details here.
+But there is now a bytecode instruction that does like, that makes this much more efficient
+than having to instantiate all these classes like this.
+Actually.
+So we'll talk about this, Scala doesn't use that new thing that Java added.
+Scala, new instruction.
+Scala still actually does the same thing under the covers of generating code.
+I should make this clear.
+When this code, when the compiler encounters this code,
+it actually generates code that looks like that.
+And Scala uses that whole mechanism.
+But Java itself doesn't need to anymore because there's a new bytecode instruction that it can use.
+And for some reason, I actually looked this up the first time I taught the class.
+But for some reason, they didn't use it in Scala.
+They haven't used it yet.
+I think they're trying to get to that because it's more efficient.
+It's very low level and I don't think about that every day.
+Oh, and then that last bit there.
+So FS of i with static type Fn, because Fn is there, right?
+Type of the variable is Fn.
+Fn array.
+And dynamic type f or g.
+So at runtime, it's either a number of g.
+OK.
+Here's some examples in C++.
+So we have A as a pointer to an animal, and it gets bird.
+And then we print out A arrow to string.
+And since it's virtual and we're using
+a pointer, we should get bird.
+And then we're going to change A to get a new cat to have a cat.
+And then we're going to call A dot to string,
+and this time we should get cat.
+I was not going to tell this.
+So, this is contrasting pointers and virtual, so behavior again.
+This is calling a method with a reference type.
+So here, we're taking a reference to an animal and here we're calling a dot two string.
+I think we end up getting animal for poop.
+But I can't remember, I'd have to put it in.
+We don't have the results.
+I'd have to type that in to figure it out.
+I think I've done that before.
+This one over here we have a bee as a bird and
+then we try to call to string and
+We should get bird and then we should get cat,
+although static types, it's different here.
+I almost feel like we should be putting that in the editor and compiling the code.
+Try those out on your own while you're stuck.
+I'm not going to spend the time on it now.
+I will actually probably do it myself but make sure you understand why.
+Each method is being called.
+Exercise for the Learner.
+All right, so here we have class A with three methods,
+class B which is extending A and we're overriding two of those methods.
+Here we have a static type A. So A is a static type A.
+Dynamic type is A because we instantiate an A.
+We call A dot F, so we should get print line F, A dot F.
+Oh yeah, it's not gonna tell us the answer, so.
+Here we have, okay.
+So just to make it clear, static type A, dynamic type A,
+static type A, dynamic type B, because we're instantiating B here,
+as opposed to an A.
+And here we have static type B and dynamic type D.
+that's because we're storing it in a reference of type B, so that's the difference.
+Yeah?
+With the first one or possibly the first two,
+shouldn't those have some sort of error because A does not have an I?
+Right, like B has a definition for I but A doesn't.
+Yup, that should, yes.
+But I don't think that this is necessarily intended to actually execute these.
+Like, you could try the instantiation and then this.
+You can actually, for this one, let's do it because it's Scala and I can do it fast.
+I think you're correct.
+So if I do, I'm going to instantiate it, then I'm going to call.
+Oh, I've got to define it, right?
+Let's get that.
+All right.
+So then we're going to call it A.F and then that will complain.
+You have to create the A first.
+Thanks.
+You have to call it.
+Yeah.
+A dot F calls F, G, and H, and it's calling, obviously, we're not in an instance of B,
+right?
+So we never would call those.
+So it's just going to print out A dot F and then calling G, and it's going to print A dot
+G, then we're calling H, A dot H.
+And then if we call A dot G, we should see G and H, right?
+That makes sense.
+A dot H, we should just see H, and then A dot, that's a call I, should fail.
+Yeah.
+So it'll complain, because there's no I defined for A.
+And then I think, if we change Val A equals new B,
+So in this case, it will dynamically dispatch to b's f because b has an f.
+But then we call this...
+I'm sorry.
+We call super, right?
+Because we call super, we go up to the one that's in a.
+So we see that's why we get a.f here.
+And then it calls this.g, so it'll dispatch down to...
+Oh, in this case, there is no overridden g, right?
+so it should print a.g, and then it calls this.h, and h is overridden so we'll get b.h.
+You can try this out. So this time, a.g, again, g is only defined here and not overridden.
+And then it calls this.h, so it prints that one, and then a.h,
+should just give us b.h, because it dispatches there.
+And again, a.i this time.
+So I think, Matt, your point was the first one would fail.
+I thought you were talking about the second one.
+First one I knew should, second one I was curious about.
+Because it is an instance of b, but
+at least in my experience with object-oriented type stuff,
+if you have a variable typed as the parent type,
+you're only allowed to access things
+that the parent class has,
+even if the runtime type technically has that method
+or variable or whatever.
+You have a good point.
+I messed up one thing here.
+So the middle one there,
+I was copying and pasting and reading from here.
+So let's double check this.
+So before, your intuition's correct.
+So before I instantiated it here and I was lazy
+and I did not assign the type and it assigned the type.
+The second time when I instantiated the B,
+I was also lazy and I did not statically define the type
+to be a B, or to be an A, sorry.
+What the REPL did was it decided that I meant that I wanted A to be type B, and that is
+not what we have on the slide, so let's try that again to get to Matt's point.
+I just caught that as you were talking.
+Why are you highlighting all that?
+Nope.
+That is not what I wanted.
+I did not copy and paste it.
+Let's try this again.
+Yeah, that's what I want.
+So now the static type of A is, lowercase a, is capital A.
+So I can call a dot F.
+And that's what we had before.
+a dot G.
+And that's what we had before.
+a dot H.
+With this one.
+Matt, you're right.
+would not call it would not work and that's what threw me just now because I
+was like as you were saying it I was like you're like you shouldn't work and
+I'm like oh you're right it shouldn't work but it's because my eye caught this
+yeah it's just like a thing that Scala like does under the hood that I just
+didn't know about or something yeah no you have to be careful with this type
+inference and that's what what got me burned there was I did not force the
+type A to capital A.
+And then, all right, so if I so the one that we did before,
+when I didn't put the type in, was what the REPL assigned.
+It assigned, I was using the letter lowercase a, but in this case it's b.
+And you can call the i on there.
+there.
+So if I had to say b.f, b.g, b.h, b.i,
+which means fine, because the static type is i.
+And because the REPL has to actually compile your code
+before it runs in memory.
+If you put this in a file and try to compile it,
+that previous code wouldn't compile, the one at the middle
+for that bar, that would come back.
+And this one wouldn't come back here.
+So these are intended as like, instantiate this line
+and then practice that.
+Put it in your REPL and see what it does.
+OK.
+So that's inheritance.
+And this is a long set of slides.
+So I'm going to get started on this stuff.
+And then we'll find a logical stopping point,
+and then we'll take a break in about 10-ish minutes.
+So now we're going to think about inheritance
+and then talk about what happens when
+we have container classes and where we're
+working with inheritance.
+How does inheritance affect container classes?
+So we'll compare inheritance and type parameters.
+That's it.
+I thought there was more.
+It's the only bullet point that we can make.
+So monomorphic, does anybody know what that means?
+It means one form.
+Morphic means form, and mono means one.
+Monomorphic, one form.
+So in C, if we want to implement a linked list,
+So this is similar to what we have in Java.
+We have when we did data structures 1, we have linked lists,
+we have nodes, we have pointers to the next node,
+and when that pointer is null,
+then we're at the end of the list.
+Right?
+So here we have some item that is going to be a pointer to the integer,
+so our item is going to be our data type that we're dealing with is integers,
+so we have a list of integers.
+You want to get the last one, well we just have to walk through the list of nodes and
+just go to the next node ring.
+And then when we get to the last one, then we return the item of the last one.
+And that's gonna return a pointer because that's a pointer .
+So what are the benefits and downsides of this?
+The thing that's the most annoying is that you have to,
+so this node has a type integer that it's hanging onto.
+And if you wanna do this with a different data type,
+then you have to use a float.
+That's an int, that's a float.
+So you have to have a float node.
+So this becomes annoying because you have to duplicate the code.
+Now you could use a void star,
+star, which is a C way of having a pointer to something.
+And then you have to cast it everywhere.
+So that's no good, either.
+And there it is.
+So you could use void star.
+So if I wanted a generic linkless in C,
+I would have to use this void star thing.
+So the difference here is my item is no longer a pointer
+to int.
+It's a pointer to a void.
+and then I have to cast that.
+So I don't get any static protection against casts.
+So here in my main program, I allocate an integer,
+and I set the value that p points to.
+So I have a pointer to that location on the heap,
+and I set the value to 2 billion or something.
+And then I allocate a new node, and I set my next pointer
+to null and I set my item to point to this P here, and then I go get last, so I execute
+the get last and I return the pointer, which is a pointer, to an integer and I store it
+off as a pointer with double.
+And now I've tried to access that and a double is going to have more bytes than a P and so
+you have this unsafe access.
+you're accessing memory that's not.
+So a double is gonna have, did I say P?
+A double is gonna have more bytes than an int,
+that's what I meant to say.
+And you're gonna then access more bytes
+than you are allowed to, allowed.
+You're allowed to do anything.
+So you'll get some undefined behavior.
+So in Java,
+This was the way life was when Java first came out.
+There were no generics in Java.
+So if I wanted a generic list, I used subtype polymorphism.
+Remember that object is a super type of every reference type in Java.
+So if I want to get the last, I can just walk through the pointers like usual
+and return my object reference.
+Right? And my code, I have to be aware, and I have to cast.
+So here I have an integer P with a value of 2 billion.
+I have a node at excess.
+I set the next pointer to null.
+I set the item to this P, the same thing that P points to or
+P refers to.
+And then I call get last, and
+I try to cast the item that I got back out into a double,
+and at runtime I will get a class cast exception because a double is not an int.
+And this would have been an unsafe access.
+So Java protected me by crashing the program,
+in a more controlled way than CLID, I guess.
+And you'll get a compiler error.
+if a jerk cannot be cast to a double?
+So that's better, but still class cast exception is not so good, right?
+I mean, if you're, like, running production code like at your company,
+can you get class cast exceptions in your running code?
+Like, that's bad news, right?
+You're going to get paged in the middle of the night.
+Not fun.
+Okay, so can we solve this with inheritance?
+So, here we have a container-based class.
+So, we have an object-container-based class.
+So, we have our nodes are defined as abstract classes.
+So, the behavior is sort of abstracted out here.
+We have an object item here.
+We have our next node like before.
+If I want to get the last item,
+then I have to have this adaptation behavior.
+This is actually an adapter pattern just in case you're interested.
+But what this is doing is it's saying, well,
+I'm going to sort of an adapter pattern.
+And I don't remember if the name has to be the same, but this is the same idea, right?
+So it's definitely a decorator because it's decorating behavior by doing cast.
+Just relating it to my earlier slides.
+Yeah, so I'm getting the last and I'm casting two in int.
+So why is this good and or bad?
+So what I've done is I've shifted the static cast
+into my library, right?
+My library, this is library code, right?
+So my link list code, my nodes, my int nodes,
+this is all the library code.
+And so I've shifted all this casting behavior into there.
+But that doesn't really solve the problem.
+I still have to do this in the casting.
+So how would I adapt a class for this?
+So this is why we have type parameters.
+Actually, C-sharp came out with a way to have type parameters,
+and then Java in its quest to win in the marketplace added,
+this is my interpretation as a Java programmer at that time,
+it added type parameters.
+if we look at a node class here, we've got these three question marks. By the way,
+these are not the three question marks we use in Scala like we're used to using
+in Scala, which throws a not implemented error. This is just saying what goes here?
+What is the return type here? And it's got the three question marks. And so what
+we do is we have type parameters. So we end up with something like this. We have
+a generic list using parametric polymorphism. So this is called parametric
+polymorphism because polymorphism is many forms, right? Instead of monomorphism like we had before,
+now we have many forms. And we're parameterizing what the data elements are, right? So here we're
+parameterizing item to be of some abstract type x that we don't care about when we're defining node
+and its behavior.
+So we have our getlast, does the same thing,
+returns the last item element, and that's going to be an x.
+And so that's why this x occurs here in the signature.
+So now if I want to create a list of integers,
+I can allocate my new node like that,
+and then set my null pointer to my next pointer to null,
+and set my item to some whatever value I want.
+And now if I try to do an incompatible read,
+the compiler won't let me do it.
+So this is different from before.
+Before I cast and the compiler let me do it,
+I'm sorry, yeah, the compiler let me do it
+and at runtime I got an exception, class cast exception.
+Here the compiler says, no you can't do this at all.
+So this is better because it's erroring out in the compiler
+before you ever get to production
+when you're being awakened at three o'clock in the morning
+with your page.
+Now in Java, before they had generics,
+I had code in my production code all over the place.
+Luckily, the code was pretty localized.
+So if you instantiated a list or an array list
+or something, there was no...
+It was like it was ArrayList.
+X equals New ArrayList.
+And there were no type parameters
+because they weren't valid Java syntax at that time.
+So if I wanted to x dot, I think it's put.
+0, 3 is my value, I'll do 37.
+This would, well, that wouldn't have even compiled because you would have had to do
+this, because it had to be a reference type.
+And back then, you didn't have auto boxing like we have now, 37.
+It was perfectly valid to say x.get 0 and say string y equals.
+And what would happen is this would compile just fine.
+Sorry, that should line up there.
+I didn't put my variable over there.
+This would compile just fine, but at runtime, you would get that class cast exception.
+But back when I was using the Java collections, you had to be careful and know what you're doing.
+If you were using hash maps or array lists.
+And usually we use these things, they were encapsulated within like some sort of class definition.
+So it was okay because you could catch it much more easily.
+We didn't let these data structures escape so much the class that we were encapsulating.
+But this was an improvement when they came out with type parameters and generics in Java.
+because now I would catch these errors at compile time.
+I think you were still allowed, and you still are allowed,
+to instantiate any of these parameterized types
+without passing the type parameter,
+but you'll get a compiler warning probably.
+So let me just look ahead a little bit.
+Yeah, we're going to talk about the Scala version of this,
+and then I'll pause for our break.
+So in Java we had this, we had our node and our X is our type parameter.
+If we want this, we have the whole behavior and implementation.
+In Scala, this is the imperative version of Scala, this is how we do it.
+So the syntax is a little different, right?
+It's square brackets rather than the angle brackets.
+We have, this is actually the constructor.
+Over here we didn't have a constructor.
+We were actually in Java, we were operating on that.
+We would have instantiated the node and then we would have,
+in that code where we instantiated,
+we would have set our next pointer to null and set our item.
+Here, because we have vowels oftentimes,
+and this is the standard way to do things in Scala,
+we would pass these into the constructor.
+And so get last looks the same pretty much.
+We can also do this, so that's the imperative way to do it.
+This we can do ADTs and recursion.
+So we have an enumeration.
+So whenever we have an ADT we have an enumeration.
+We have nil, which is our empty list.
+We have node, which has some head element and then some tail.
+Here they're called item and next.
+So if I want the last element, then I'm gonna use recursion.
+Right? I'm gonna say this match.
+And if I get nil, I'm gonna return none, cuz there was nothing.
+This is why it's called option by the way.
+And then this is pretty standard in scale,
+put the word option on there.
+If we find, if we have a node with an item,
+then we return, this is a,
+This is...
+Oh, this is right.
+We're matching on item and mill,
+so we're at the last element.
+Okay, here we have some item which we don't care,
+so we don't bind it to a name.
+And we have a next, which is the tail,
+and we're gonna call next.lastOption.
+So this could actually be tail recursive, I think.
+So this is how we do that in Scala.
+All right, we'll stop here for our break.
+So I'll let you go until 35, so that's almost 20 hours.
+Start up at 35 after.
+Oh, yeah, you want to see that?
+I have to ...
+Your score is all on my computer, so I have to write it into your sheet.
+So give me a minute.
+No worries.
+Most important thing is that I pull the plug on the monitor.
+Raven, did you take it in the classroom?
+Yes.
+You did?
+Yeah.
+Two weeks ago, I can't remember.
+Yeah, I was there.
+There you are.
+Now what I have to do, I don't have it on here yet because I typed in your answers into
+a file, ran a program and typed the scores directly into D2L so I have to find you.
+I think I have an idea of which one.
+Sure
+I'm going to make a lot of bread.
+I won't forget to make some bread.
+I'm going to put it on the bread.
+so
+Oh fine.
+Oh, okay.
+Okay, I screwed up.
+Your score is the same, it's just I got offline when I was figuring that out, so that was correct.
+Oh.
+But so, the other ones.
+Okay.
+My bad.
+I'll make the make up.
+I'm going to use the fancy recipe on the shelf.
+I'm going to use the fancy recipe recipe for the first time.
+I'm going to use the fancy recipe recipe for a lot of these recipes.
+Now, I'm going to use the recipe recipe for the recipe recipe for the recipe.
+I'm going to use the recipe recipe recipe for a recipe recipe.
+So...
+It is a really good evening.
+It will be the best.
+I have a good evening just to begin with.
+I'm going to make the most途 of the day.
+I just want to make the best.
+Thank you.
+I'm going to get it done.
+For a second, I'm going to use a chip.
+I'm going to use a chip.
+So, I'll use a chip.
+It's what I'm going to use.
+You can use a chip.
+so
+okay
+of course
+yeah
+that's number seven yeah
+Let's do this.
+I have to keep reading because I'm eliminating.
+Okay.
+Yeah, I understand that.
+Okay, what's your question?
+I guess what had it tripped me up.
+I think I had got through here and then originally I think I got through here because I'm
+agree that I have shot some her, and I guess I didn't even
+put up the bar because of the
+.
+I think I didn't put up the bar because I was
+.
+Something.
+Yeah, so for this one, being the bar, I guess that was
+what kind of tripped me up.
+Right.
+The reason why it's a var is x is a variable.
+You're talking about number three.
+So it has to do a lookup, right?
+So, if you're running program, you have this variable x.
+And so your running program has to figure out, well, what does x mean?
+So it has to look it up in a variable store, and it gets seven out.
+The difference between var and num.
+So, num is like you would just have a number and like, if they don't have that anywhere,
+it would be like, literally seven and then seven.
+It's not an x and seven.
+This had to look up in zi what x means.
+sign variables, what x means, and that's just a math.
+.
+Now that's key .
+x is the key and the value is 7, whereas the number would have 7, 4, yeah,
+because there's no looking number, it's just literally, it's a literal number.
+It's a number.
+So yeah, so the answer is a, so r is 7.
+And actually, if you collected the process of elimination,
+obviously, this is going to be greater than or equal to.
+And then, if you think about it, if you read all of it,
+figure out that well x is seven and y is two, so seven bigger than or
+equal to two, and that's true.
+So that's why that's if true.
+You're limited to these two choices now.
+Now you're just down to is it the number, the bar.
+Mm-hm.
+Yeah.
+I think it over one more time.
+I would have .
+Good?
+Yes.
+Any others?
+I think the other ones I knew already.
+I just wanted to see if they, because I put question marks.
+And I was like, yup, they were those ones.
+Yeah, cool, alright.
+Good morning.
+I will know my family.
+I'll use the top of the top.
+I got a lot of water for a while.
+I don't know if you like this!
+I'm going to try to keep my own water
+and get the top of the top.
+I'm not going to be careful.
+I'm not going to be able to keep my own water.
+I'm not going to be able to keep it.
+I'm going to keep it all together.
+I'm going to keep it in my favorite place.
+I'm going to keep my own water.
+I'm going to keep it in my own water.
+So let's play this game.
+Okay.
+All right.
+I love you.
+so
+and
+All right, so picking up where we left off, we were talking about generics in Java and
+Scala, and I told you a little bit about how generics weren't supported in the earlier
+versions of Java, and that gives rise to this consequence.
+So Java tries very hard to make sure
+that code written in Java before will compile
+in newer versions of Java.
+So what that means is called backward compatibility.
+And what that means as a practical matter
+is Java has something called type erasure.
+So in Scala, because Scala was, and Scala
+doesn't actually provide the same kind of backward compatibility
+guarantees.
+So in the earlier days of Scala, if you
+upgraded from like Scala 2.10 to 2.11, or 2.11 to 2.12,
+you actually would get, sometimes your code
+wouldn't compile anymore, because they
+change the language. But Java doesn't do that. So, with Scala, if I have an array
+list like this here, there's going to be this automatically this is, I think this
+is... I forget what that's called. This is called the type bound, the syntax here.
+So what this means is X actually has a class tag that's associated with it. The
+class tag is some identifying information about like X's so if you
+actually that code what that syntax means is class array list X that's my
+type and then see that part of the right so it says that Scala reflect
+last time I'm gonna skip over that for a minute what I have is size and and now
+back to that business here to the right of the colon it actually will create
+What we used to call in Scala 2, all of Scala 2, it created an implicit parameter.
+In Scala 3, it's got using.
+And so this will...
+And actually, yeah, I think this is the right syntax, but we'll have ct.
+I'll just make that up. That's a variable name. Of type class tag.
+X.
+So that syntax there is called a context bound.
+And that means that we're going to have an implicit
+available to us in the code. So we'll know what the class is.
+So that's what this means. So, um, in Java,
+You don't get type parameters, they're not part of any runtime information.
+So if I have a class ArrayList here,
+if I try to do this and I try to instantiate a new array of Xs,
+the compiler will yell at me and say,
+we can't do this, that's a generic array creation,
+I don't know anything about X.
+So I can't allocate memory for that at runtime.
+So here, what we have is the solution
+for what we had on the previous slide at the bottom
+where we tried to do that at line four.
+You have to do this.
+You have to actually instantiate a new object
+and then you have to cast that at runtime
+to an x array.
+So conform.
+So why is the cast not checked at runtime here?
+Well, here it doesn't know anything about x.
+It's just object.
+And that's how Java, when it came along and added generics,
+in order to be backward compatible,
+it just left out all of the type information at runtime.
+There's no place for it on older versions of Java,
+your old code will still compile.
+So what we typically do is we add this little annotation here to turn off the compiler warning.
+So here we got a compiler warning. That was the previous slide. Uncheck cast but this is the
+approved solution for this in the current versions of Java and so we have to do this. This shows up
+in the data searchers one way because we hand out Java code and then if we have arrays of things,
+of objects, we have to if we have arrays of subgeneric type X,
+we have to do this.
+So it's OK, this is safe, since all references in the array
+are null and they can be assigned to any reference type.
+So when this is created at runtime,
+you get an object array, and the initial value
+So it's null for every element.
+So it's not possible to check CAS
+when writing to an unparameterized list.
+So here I have a array list of strings
+and now I have an array list
+without a generic type parameter.
+So this will compile.
+And I can then put, call put,
+and I can pass this integer here.
+And it will actually store a reference to, remember,
+it's under the covers.
+It's just a reference to an object.
+This will box into an integer, capital I, instance.
+And then, when I try to call get, this will compile,
+because Ss is an array list of strings,
+so this will compile.
+And at runtime, it will try to cast it to a string,
+and it will throw a class cast exception.
+So this is to push the problem into the runtime.
+But arrays are a little bit different. So arrays are actually checked when assigned.
+So Java actually will store types with arrays and that's been the case since the beginning.
+So here I have SS is an array of strings
+and then I have object OS and I can have OS refer to SS.
+And here if I try to call OS and set it, this will try to box it to an integer and try to store it.
+But since it's looking for a string to be assigned at that time, you'll actually get, at runtime, an ArrayStoreException.
+You're storing the wrong type.
+So we talked about Java and Scala and generics.
+And now let's think about how C++ handles this.
+So in C++, there's a feature called Templates.
+And templates are instantiated with concrete types.
+And what happens is the compiler checks
+that the types fit to all used operations.
+So what this code actually happens here.
+Here's my main program.
+So in my main program, I'm instantiating
+my node to be a node of int.
+And the compiler actually generates a separate class
+for node of int because it encountered
+that you wanted a node of int.
+If I don't have a node of float or any other type,
+it won't actually try to generate that code.
+So on the fly, the compiler generates code
+based on how you're using it.
+This can be a problem.
+So here I have my node, which has t abstracted out, and I'm trying to print cout.
+So I'm using cout to print, which uses this little operator here in c++.
+This will work fine like this for an integer, but if I define my own type, this pair,
+this, I believe, will compile just fine.
+Oh, no.
+It will not compile.
+The compiler will complain, because what it's looking for
+is it's looking for an implementation
+of this operator for my point.
+So you see in my printcout, I'm actually
+trying to call cout with this operator,
+and I need an implementation of that for point.
+I get one for free for ints, I get one for probably certain string types in C++.
+But when I try to print out my special struct pair here, there is no...
+operator, IO stream operator implementation that I can use.
+And so the compiler combines.
+So, that's how it works in C++.
+So what are the benefits of parametric polymorphism?
+So we get generality, so we can have one implementation of the code and
+that will work for many concrete uses.
+So in all the cases we saw with C++ and Java and Scala I didn't have to copy
+the code over for every different type, right?
+I didn't have to manually do that as a programmer.
+The language handles that.
+And then I get specificity so type parameters will constrain the possible
+So if you think about the difference between these two definitions of f, on the left I
+have a type t, and I take a sequence of t and I return an int.
+On the right, slightly different, I take a sequence of ints and I return an int.
+So for this one there's really only one sensible implementation.
+It's the length of the sequence.
+So why is that?
+Well, we don't know anything about T. You can't do any sort of math on T. You can't
+sum up all the T's. But with the one on the right, we have many possible implementations.
+So you could have the length of the sequence. You could have the minimum value that occurs
+on a sequence. You could have the maximum. You could have the median, the first element,
+There are all kinds of implementations.
+So you get specificity when you use generics or
+parametric polymorphism is the general term for it.
+This is that thing I was just doing over here so.
+I would say I want to define the ordering of elements.
+So this is Scala but
+It's sort of the Java way too.
+You have subtyping polymorphism.
+So what does this mean?
+Well, all right, I'm defining a trait, Ord,
+over some abstract type T. And I'm going to compare myself.
+Because in the implementation of this, I am an Ord.
+And I'm going to compare myself with some other Ord.
+So if I want to define a max, I could say, oh, OK, well,
+I have an x and a y and I'm going to call x dot compare y.
+This is like what we get in Java, right?
+And if I compare and I get a result back that's bigger than zero,
+then x is bigger, so I return x.
+And otherwise, I return y.
+And so you can add this to class statically.
+So when you define a class my int,
+you can extend the port of my int.
+So this is the classic subtyping polymorphism way to do it.
+If I want to do it with parametric polymorphism,
+then here what I have is I have x is a t, y is a t.
+And I'm using, this is that using thing I have over there.
+Using ord, and that's using the order definition that I created.
+There's some instance of this.
+This is actually called a type class.
+some instance of a type class.
+And I call that type class, and I say I'm going to compare with X and Y.
+And so here, it's different in that I'm not extending my class to have it.
+I just have the ordering is decoupled from the type T, so
+you can use different orderings.
+And then to get an instance of this,
+you would just somewhere in your code when you'd had.
+There's scoping rules for how the compiler resolves implicit.
+So any time you see using or given,
+you're dealing with what in Scala 2
+would've been called implicit.
+And there's scoping rules, so the compiler knows how to find.
+And if there's conflicts, it will complain.
+like the compiler won't let you proceed.
+But this syntax here means I am creating an instance of ord
+for int.
+And this is what my compare method looks like.
+So I'm providing that implementation.
+And then at the time this code is compiled,
+there has to be a given ord of int.
+If you're using ord with, here we have t.
+But if we're using ord with ints, I'm sorry,
+if we're using max with ints, then
+There has to be an ORD event available for the compiler to find.
+So that max there has that using ORD there.
+In this case I have the context bound, t colon ORD.
+So here I have, oh right, what I'm doing is I'm calling reduce left on my sequence, which
+is a method that's defined on the sequence and I'm passing max here and what, reduce
+left will have an implicit word parameter as well.
+There might be, it might be defined with a context bound.
+It might be defined with a second parameter list that we had here.
+If I want to define a descending order based on ascending order, I can do this using thing
+So, here I'm descending using the ascending order.
+So, again, there has to be something given, something implicitly given in scope.
+And here I'm just constructing a new ord, and I'm just reversing what the other one
+does.
+And I do that by just reversing the order of the parameters I'm passing.
+If I want to find the minimum among the sequence of orderable items, then I can call maximum
+maximum using descending.
+So you can mix and match these things.
+This code, actually, so I think this code here,
+this is the code that last quarter I was like,
+I've never seen this before,
+because usually I work in Scala 3.3 or Scala 3.6.
+You have to be in Scala 3.6 to actually get this code to work.
+So I learned that, and I don't have it installed on my machine.
+But what this is doing is it's extending the ordering
+on elements to ordering on containers.
+So here, what does this mean?
+Well, I have an ordering.
+Yeah, the syntax throws me because of this error here,
+and I'm not used to thinking about it that way.
+But I have a compare method, and so I'm matching on these lists.
+If I get nil, nil, well then there's nothing to compare.
+If any one of them is nil and the other one has got something,
+then this one on the left is less than.
+This one on the right here is gonna be greater than,
+so that's why it's returning want.
+And then if I have this case here
+where I have a head followed by some tail for the first list
+and a head followed by another tail on the second list,
+then I have to compare the head elements.
+Don't worry too much about this slide.
+So here's our summary on parametric polymorphism.
+So we have type parameters, which give us independence
+between container classes and the types of contained objects.
+We have type safety for reading and writing.
+Not all languages are going to retain
+the type information at runtime.
+So Java compiler knows generics, but JVM does not.
+And functional languages will use type parameters
+to shift code correctness to the compiler.
+So in functional languages, you get the ability
+to have your compiler catch more bugs than you would in OO.
+C++ templates, so the template itself
+has no executable form.
+So you have list of T, and then it
+generates the executable code for each instantiation.
+So if I use a list of ints in a list of strings,
+I'll generate executable code that will allow me
+to work with lists, events and strings.
+And then you might have compile problems get hidden
+until you instantiate the template.
+All right.
+And now we'll talk about subtoping.
+This might take us to the end.
+We might not get to the end of it.
+We'll see where we end up.
+Sort of struggled with what order to present things in
+because you have homework, so I want
+to make sure to cover the things that your homework covers
+for this coming week.
+And then we can squeeze in other things.
+All right, so what should the type relationship
+between parameterized types be?
+And we're going to talk about restrictions on parametric types.
+So we just talked about parametric types,
+now we're going to talk about restrictions.
+So here we have static and dynamic type.
+So our static type of x is A, and our dynamic type is also A.
+Our static type of Y is B, and our dynamic type is also B.
+And it's okay to take my instance of my B
+and assign it to a reference of type A,
+to a variable of type A, because B extends A.
+That's what this means here.
+So that's okay when A is expected.
+I can do this with method parameters.
+So if I have a consumer that consumes an A
+and I want to pass a B, that's okay,
+because a B is just extending A,
+So that's perfectly legal,
+so B is okay when A is expected.
+On my method results, if I call a method,
+producer in this case, and I get back a B,
+I can store it as an A,
+because an A is a supertype of B.
+And even though it's returning a B,
+I can just say, well, I'm gonna refer to that now as an A.
+So it's safe to use an instance of B when an A is expected.
+B is a subtype of A, so in Scala, we write that like this, B with this little angle, left angle, colon A.
+So this means, this is transitive here.
+So if Y is a B, as of type B, and B is a subtype of A, then Y is also of type A.
+That's an up cast.
+So subtyping is not just sub-classing, so when we have parametric polymorphism, some
+monkey wrenches get thrown into the mix.
+So here's our subtyping relation, this is that Scala syntax up there.
+So this subtype relation is a partial order on types.
+So it has to be reflexive, so that just means that any type is a subtype of itself.
+It has to be transitive, so if duck is a subtype of bird and bird is a subtype of animal, and
+duck is a subtype of animal.
+Makes sense.
+Some programming languages have this notion of a top type, for all X greater than all
+other types.
+So what does that mean?
+Well, there are examples that we can think of.
+Java, what does Java have for references?
+What's the super-type of everything?
+Object.
+What about Scala?
+Any.
+Any, right?
+That's the super-type of all types.
+So the top type is there.
+And then for references, there's like you can say
+there's a top type for references.
+So any ref.
+So this is what we just talked about.
+So Java.lany.object is above all reference types.
+And in Scala, Scala.any is above all types.
+And Scala.any ref is above reference types.
+So here, I have a list of any refs.
+This is a string, and this is a list of one.
+And I can refer to that as a list of any refs, no problem.
+Because they're super types.
+And then for wise, I have a list of any.
+So here, I have a string, and I have an int, or an integer,
+or an int, a capital I int in Scala corresponds
+to a primitive in Java.
+And the reason for this separation between AnyVal
+and AnyRef, or I think it's AnyVal,
+is because everything in Scala is compiling to JVM.
+And so under the covers, when they implement things,
+the compiler is using the equivalent of the Java primitive base steps.
+So most programming languages don't have a bottom type.
+So we just talked about a top type.
+Now we have a bottom type.
+So in this case, bottom would be a subtype of x for all x.
+So it's less than all other types.
+So in the Scala type hierarchy, we do have this.
+And this is called nothing.
+So if we go to the Scala type hierarchy,
+this link will take us to this picture,
+which I think we saw earlier this quarter,
+is what we were just talking about.
+We have anyref is above all the object types
+that's equivalent to java.lang.object.
+These are all the anyval types.
+Nothing is below everything.
+Also null is below every other reference type.
+So this kind of shows you the relationships, right?
+This is actually very interesting to me because what is bottom type useful for?
+Well, it's important for typing uses of nil.
+So nil, we can say, here we have a nil, which we have a variable or a val called nil.
+And it's a list of strings.
+And we have nil, and that's because nil can also be a list of nothing.
+So, nil is actually defined as a list of nothing.
+And since a list of nothing is a subtype of a list of anything, that's why this works.
+So, the best type possible here, if I have this, I have a list of strings,
+because I've declared nil to be a list of strings.
+This nil, lowercase, no.
+Here, if I do that, well, list of nothing is a subtype of list of strings,
+so this will also be able to be a list of strings.
+And then I can do the same thing with ints, and I can use my nil here.
+If I did this same thing here, I have to have a list of any.
+The difference here is that I can make this a list of int.
+So, nil is of type list of nothing, and a list of nothing is a subtype of list of x.
+So by this transitive property, we have x, which is a list of nothing, is a list of x.
+Okay, so now the plot will thicken.
+So now we're going to talk about containers.
+So here what I have is a container called box.
+And my box contains something of type x, whatever x is.
+So we have this abstract type.
+So my content of my box is an instance of an x.
+So I can have concrete boxes.
+So here I have a bird box, which contains a bird named feathers.
+That's what that is.
+Yeah, that's the name.
+And then I have a CatBox which contains a cat named Fluffy.
+I can create an abstract box if I want.
+So I can say, I'm going to have a box that holds animals.
+And it has a bird named feathers.
+And that's an animal box.
+And now I can say animalbox.content is now
+going to contain a cat named Fluffy. I can alias boxes. So if I try to do this now,
+animalBox equals birdBox, assign this is assignment, it won't compile. And it
+doesn't compile because a birdBox is not a subtype of animalBox. You might be
+going, well, you just showed me lists. Lists, I could do that. Why can't I do
+got with boxes. And that's because box is invariant in its type of parameter
+animals. What does that mean? Well, let's dig into that, but let's think about what
+could go wrong. So if I allow assignment, so I have a bird box, and then I have an
+animal box equals bird box. This doesn't compile, but let's assume it does. Okay, so
+So I could read the content.
+So my animal box, I can read the content and get an animal out.
+So that's OK.
+And now I can put a cat into an animal box, so that's OK.
+But now the bird box contains a cat because we aliased it.
+So if we were to allow that to compile,
+This would create a problem.
+So we're writing to an alias container,
+and that would create type violations.
+And Scala, we do not have type violations.
+So let's disallow modifying boxes.
+So we've seen this syntax before earlier in the quarter,
+but now I'm going to present it to you formally.
+We have this syntax here with this little plus sign
+in front of x.
+What does that mean?
+Well it means that we're not allowing modifying boxes.
+So this is an immutable box.
+So now I can create an alias box.
+So I have an immutable box that holds a bird named Feathers.
+So I'm going to refer to that bird boxes and mutable box of birds.
+I can take my bird box and alias it as an animal box, and refer to it as an immutable
+box of animal.
+And now I can get my animal box content out and refer to it as an animal.
+And now I try to set the content of the animal box to a new cat named Fluffy and that won't
+work.
+I'm not allowed to write.
+The compiler will complain, because that's immutable.
+So the term for this plus thing, it's saying that immutable box is covariant in x.
+The covariance type annotation plus x can only be applied to read-only structures.
+So if I were to change this to var and try to compile it, it would complain.
+Compiler won't allow that.
+So this is what covariance means.
+So if I have a class B, this is a little hard to see,
+because they all have this C in a circle.
+If I have a class B, that's a subtype of class A.
+And if I have an immutable box of type B,
+well that will be an immutable box of, sorry,
+that will be a subtype of immutable box of A.
+So again, class B extends class A.
+That means, because we're covariant,
+immutable box of B will extend immutable box of A.
+so it varies with covariance.
+So what's the practical relevance of this?
+Well, alright, if I print this print line here,
+let's print some concrete boxes.
+So I have a bird box and a cat box,
+and I say print animal name.
+That should be fine.
+So they should print the names just fine.
+Oh, and the reason why is because b.content is going to be some animal.
+It's going to call whatever the name is.
+Now scala lists, earlier I said I had the box with no variance annotations on the type
+parameter, and I said, well, wait, you just showed me lists and that worked.
+Well, that's because lists are defined to be covariant.
+So if you look at the scholar source for lists,
+you'll find that there's a plus X or plus T
+or whatever type of variable is.
+So if I have a list of birds and a list of cats
+and I try to print animal names, I can do all that.
+But list has to be covariant to allow print animal names
+with concrete arguments of list bird and list cat.
+Otherwise, you don't get the relationship that we saw back here on the lower right side of that slot.
+You don't get that if it's not covariant.
+So that's what that last bullet point means.
+It has to be covariant to make that work.
+Let's think about arrays.
+So Scala Arrays are defined to be invariant.
+So if I have an array of birds like this, this is fine.
+I can print animal names.
+But that's not fine because the compiler will say,
+no, you have an array of birds and I need an array of animals.
+And because that type that the array is holding
+is not declared to be covariant,
+then the compiler will compile it.
+And this just says, basically, an array of birds
+is not an array of animals.
+Because of the way you've defined array,
+the way Scala defined it.
+So Scala and Java arrays are readable and writable.
+So Scala arrays are invariant.
+So it's like that box that we had,
+with the no plus in front of x.
+compiler error when writing two alias.
+Java arrays are covariant,
+so if you try to do this in Java,
+you'll get a runtime exception when writing two alias.
+So how can we still print arrays generically?
+So we can actually do something like this.
+We can declare our print animal names parameter animals
+to be of this type, it's an array of something
+that extends animals.
+This is using a wildcard.
+So this will work, I think.
+This will compile.
+Yes, this is right there.
+But you can't write to the array
+because here it's saying I found a cat
+but I'm required to have an animals.teeth,
+just kind of a weird error.
+But because you have fixed, there's some type that got fixed, and now you're trying to use a different type.
+So it won't work.
+So what about writing?
+So here's my put cat, and I have my box.content.
+I'm setting it to contain a cat named Fluffy.
+Well, if I try this, I try my, I have my Animal Box.
+I pass the cat whiskers and I say put cat,
+so I'm gonna take my Animal Box.
+Well, a box of Animal is not a box of Car.
+So that's no good.
+Because the Animal Box could be a bird box.
+So what if we disallow readings?
+So before we disallowed writing with that covariance annotation.
+Now we're going to use something called a contravariant annotation.
+So that's what this minus means.
+So now if I have a mutable box, this is kind of curious.
+I think you could actually declare the bar here, but
+I think they're trying to encapsulate it, right?
+So this is your, when you construct it, you have to provide an x and
+then you're gonna set this private var this variable here.
+And now I can put an element here so I can update that.
+But I had to do this so that I disallowed your name.
+That's why.
+This parameter here, this constructor parameter,
+is not visible outside.
+So here, I have a put cat method that takes a mutable box of cats and I'm adding a fluffy,
+cat named fluffy to my box.
+Now here I have an animal box that has a new mutable box of cats and I can try to call
+put cat here.
+And this should work because mutable box is covariant index.
+So basically I'm going in there and I'm changing the animal that's being pointed to or referred to.
+So contravariance type annotation minus x can only be applied to write-only structures.
+So this is the relationship.
+So this is similar to what we had before.
+So on the left we have the same thing.
+We have class A and then we have class B extends A.
+What happens with contravariance is immutable box A, notice the arrow here is down here.
+I would have written it the other way, but immutable box B is the supertype of the immutable box A.
+So because of this triangle here, that's how UML works.
+You can draw it from any direction, it doesn't matter.
+So contravariance allows this thing called degraded root.
+So my beautiful box here, I can create my box and modify it.
+So here I'm creating my beautiful box.
+It has a bird named Feathers.
+And that's an animal box.
+And then I get the animal out and I have this any.
+So that's called a degraded read because you don't, you lose the type information.
+So covariant, I'm sorry, contravariant wildcard.
+So here, if I want to add to a list of cats, so I have my cats, listed cats,
+and I want more cats, so I add fluffy, so that'll be okay.
+If I want to add to a list of animals, though, that won't be okay.
+Because list is declared to be covariant.
+in the type parameters.
+So what does this mean?
+So if I have a list of animals, I have a bird and cat
+in my list, and then I want to add another cat to animals,
+it will complain and say, no, I need a list of cats here
+for add fluffy, and you're giving me a list of animals.
+So you can't go that direction in the type hierarchy.
+So you can accomplish this by using this wildcard.
+So this is the same idea.
+Notice here, we have this super-type relation here.
+That's the opposite of what we had before
+with the direction of the angle bracket.
+So that's called a contravariant wildcard.
+Also, we sometimes call these type bounds.
+You might hear the term type bound.
+So animals is a list of animals and it has a bird and a cat, and I can add fluffy, but
+I'm going to get out a list of any, because it's some type that's a super type of cat,
+but we don't know what it is.
+So the compiler just says, well, that has to be a list of any.
+So in this case, that's what we get, but can we do better than list of any?
+So we can use a contravariant type parameter, rather than a wild card.
+So here, I have X is a supertype of cat, and I'm bound...
+So I'm basically going to force it to be a list of animal.
+So here I have a list of animals, inverted and cat, and I have more animals, so I'm going
+to add fluffy.
+And that works.
+And now we're getting into some interesting ways to use types.
+So this is called the pinot numbers.
+So basically, we're talking about natural numbers.
+So we start off at zero with natural numbers.
+And every number in the natural numbers is basically a successor to a number.
+So we have zero and we have successor, so we have this is an algebraic data type.
+Could have probably used an .
+Not sure, I've had to check that, not sure.
+This is the thing when I sit down and play with Scala for work and
+I'm playing with I'm actually implementing something.
+I'll try it out and see if it compiles.
+and if it doesn't pile down, I'm like, oh, I must be .
+But we have 0, we have a successor to some natural number.
+So I have 1 as a successor of 0, and then 2 as a successor of 1, and so on.
+These are type aliases, so
+you have 0 as defined as a sub-type of nat, but
+Here now I'm defining one as a successor of this other type.
+So I believe this code is probably only gonna compile
+on Scala 3.7 or beyond.
+So here I have a trait, and the trait is named
+left angle bracket.
+And then I have two types A and B
+which are subtypes of the natural numbers.
+And now I have an object, so this is a companion object
+for that thing.
+Here's a base case, so given, this is an implicit thing.
+And then this is the inductive case.
+This syntax, this is the one where I kinda got stuck
+before and I was like, this is part of what I've never
+seen before until last quarter, and I've not used
+Scala 3D, so I wouldn't worry about this.
+This is just an example of my .
+So you can play around with it if you wanna upgrade
+because I have a smaller scale of like 3.8 or 3.7 or something.
+So the compiler here is going to infer the type of P given types in object, ankle bracket left.
+So here's our summary. This is the important step.
+Subtype polymorphism. So we talked about that earlier.
+B is a subtype of A. That's what we're used to when we're dealing with objects
+oriented types.
+And we have classes extending classes or implementing
+interfaces or abstract classes.
+That's subtype polymorphism.
+Parametric polymorphism is when we parameterize a class
+with a type parameter.
+Then we have covariant, contrarian, and invariant.
+So this just kind of gives you those three concepts
+and then talks about the relationships.
+So for covariant we can read, but we can't write,
+The container class is coded, so we can read and we can't write.
+The relationship is that the container of the subclass is a subclass of.
+That's a lot of subclassing.
+So if B is a subtype of A,
+then the container of B is a subtype of the container of A.
+The box would be immutable, the collection would be a list.
+The annotation to define that type is to use this plus symbol.
+And the functions that we have would be we're producing x.
+So we're reading x.
+We're consuming.
+Not consuming.
+Sorry, that's consuming.
+This is producing x.
+We have nothing but we get an x out of .
+For contravariant, we can write, in this case, if a, I'm sorry,
+if b is a subtype of a, that means the container of a is
+a subtype of a container of b.
+So this is the opposite of that.
+The box is mutable.
+There is no real collection here because we can't read.
+So it doesn't really make sense.
+The way you define this is you define your type parameter
+with the minus.
+And this is the definition of the container class team,
+by the way, just to make that clear.
+Functions, so this is the consumer.
+So you're writing, but you're not reading.
+Invariant, you can read and you can write.
+So subtype, I'm sorry, container of A. So if A, sorry,
+if B is a subtype of A, there's really no relationship
+between the containers.
+We saw that with the code that did the group.
+Our box is going to be that box of x that we had in the initial set of slides back in
+the beginning of this deck.
+Our collection is going to be an array, not a list.
+Our annotation here.
+We have no annotation, so here we have plus for covariant and minus for
+contrivarian.
+Here we're invariant, so there's nothing.
+And then our functions, well we can take an x and produce an x.
+We can read and we can write.
+So Java arrays are covariant.
+So here's an example.
+We have an array of Bs, and then we're going to say,
+we're going to have AS as a reference to an array of A's,
+and we're going to alias, and that's OK because it's covariant.
+And then if we try to store a new A in here,
+We'll get an array store exception because at runtime,
+it knows it's supposed to have b's.
+And then if we want to access the zero of the element
+and call g, we can try that.
+But here, this code would complain at line,
+I think it should be four.
+So every assignment to an object array is dynamically checked.
+So why?
+Well, if we wanted to in Java if we want to sort there's a lot of
+ways that sort methods are typically defined like arrays.sort.
+There's an object array.
+and if I have an array of strings and I want to call sort on the strings I need covariance to
+make that work. Java generics this is if you've ever seen this in Java this is like some of what
+we were talking about so this means X is extending comparable of some type that is a superclass of X
+In Scala, that's what it looks like.
+I have X is some type of comparable of some type that's a super type of X.
+So if I wanna use this, I can say class A implements comparable of A.
+Class B extends A.
+I can have an array of B's and I can sort.
+Here's another example.
+This might be useful.
+This is the producing and consuming that I was talking about before.
+Source is going to produce something.
+I can get an x out of my source.
+I can put an x into my sink and that will have some sort of side effect.
+It would do something, but it will return unit like when that method is called.
+And then if I have a reference to an X, then that's going to be invariant.
+It's read-write, but I can't change it.
+But here, class ref extends source X with sync X.
+So if you are trying to extend something that has a mismatch between the variance annotations,
+then you have to be invariant.
+So I love this slide because when I looked at it last night, I'm like,
+what's d, r, and s?
+once we have to actually move ahead to get to DR.
+So we create our type hierarchy.
+We have our animal, bird, cat, duck.
+Notice duck is extending bird, but bird and cat
+are extending animal.
+I can create my references.
+So I have a reference to a bird.
+I have a source of animals, which I can take my refer of bird
+and treat it as a source.
+And then sync, I can actually push duck,
+so it looks like, into the reference.
+So one of the static and dynamic types.
+So D is going to be a duck.
+I'm going to call sync.put.
+And then I'm going to call ref.get and source.get.
+And I guess I would have to type this in.
+So one of the static and dynamic types of DR and S.
+So here's D. So D is statically a duck, and dynamically a duck.
+R is what we call ref.px.
+So here we have a ref of birds.
+So that's invariant, so R should be a bird, static and dynamic.
+and then source.get.
+If I call source.get, I should get static and animal.
+Oh, you know what I don't remember
+is that I put a bird or did I put a duck?
+I look at ref, I have a bird, but no duck.
+Never instantiated a duck.
+So when I call ref.get, I get bird out.
+When I call source.get, statically I get an animal out.
+But if my ref has a bird, my dynamic type will be a bird.
+Here's another example.
+So functions, this covariance and contravariance actually makes a little bit more sense if you think about it in terms of functions.
+So notice that if you ever look at the scala source for the function trait, you'll see that the input to your function,
+the parameter that goes into your function, the x thing, is contravariant.
+And the output is codemarian.
+So you can play around with this code.
+This just means that you can think about functions in terms of the input and output parameters
+with their subtypes and supertypes through that.
+And then, here's your variance annotation.
+So we have producer, consumer.
+So there's covariant, contravariant.
+will have both and operators are typically invariant.
+Think about that operator.
+What's the classic example?
+It's like plus, right?
+So you've got two integers.
+You've got to have the same type.
+You've got to have integers to add.
+You can't add something that's an integer with some other thing.
+It doesn't make sense.
+So if I try to find a producer like this instead of like that,
+the compiler will yell at me and say, no, type Y
+occurs in covariant position.
+So that would allow you to create type errors at runtime
+if it would allow that to compile.
+The same with consumer the other way.
+So you can't write something that's new.
+So that's covariance and covariance, right?
+So that stuff can be pretty heavy.
+Because when I first thought about it,
+When I was learning Scala, I was like, oh, wow.
+Yeah, this is like, why is a container of B,
+if B extends A, why is it not a container of A necessarily?
+Why is it not a subtype of?
+And that's, it requires you to think about that.
+It took me a little while to get that concept,
+and then it's not something we talk about very often anymore.
+like because usually I'm not defining like library code.
+So all right, so we've got about a half hour left.
+So what I'd like to do is go back through and review stuff.
+So this will hopefully be a little later.
+I thought we would start with stuff from last week.
+Maybe we could alternate between weeks.
+What I would recommend though is like next week, come to class.
+If you have specific ones on the study guide, you want to go over.
+So in each question, just like before, it tells you which slides, which set of slides.
+And every quarter I go through, because it's randomly generated, and I go through and I
+make a list of which weeks cover which stuff, right?
+So then I can kind of go back through.
+So I'll start with last week's material, and then I'll kind of alternate between like week
+seven, week six.
+So let me bring this up.
+No, that's the midterm study guide.
+That's the wrong way.
+I'm still on midterm.
+Midterm on my brain.
+Let's close that.
+The first one we'll do is
+is number three.
+I'm gonna skip around these,
+but I wanna do the ones that are
+specific to the topic.
+So this talks about scope and lifetime,
+which we did last week.
+So we have these Scala definitions.
+So we have our object o, and we have x is a val, it looks like it's type int.
+We have function, we have a val g which is a function here,
+that function takes an int, our f takes an int, our g also takes an int.
+And g is gonna do, what is g doing?
+If x is zero, it just returns itself.
+Otherwise, it calls, oh, it's going to recursively call g, okay?
+And then add x to it, okay?
+And then when you call f, you'll call g first, okay?
+And then there's this other g out here, right?
+I've never seen this question before, so let's see how we do.
+Each line of code has a comment,
+giving unique numbers to each occurrence of an identifier.
+Which one of the following statements is false?
+Okay, so let's go through.
+So G3 is statically bound to G4.
+So G3 here is statically bound to G4.
+Is that true or false?
+G3 is here.
+This is the occurrence of G3 and G4 is defined here.
+I think G3 is not statically bound to G4.
+That's what I think.
+Let's look at the other answers and see what we think.
+So O2 is statically bound to O1.
+So where's O2?
+O2 is here.
+It's statically bound to O1.
+That looks right to me.
+I don't see any other occurrence of O.
+So that's a true, so that's not the answer.
+X4 and X5 are statically bound to X3.
+So let's see, x4 and x5.
+So that's x4 and that's x5 are statically bound to x3.
+That's x3.
+That's here.
+And we have x3 here.
+And we're inside, because we're indented, we're inside that function g there.
+That's defined at line 4.
+So yeah, that looks like it's true.
+F2 is statically bound to f1.
+So let's see.
+F2 is statically bound to F1.
+That looks correct because this is going to call the F that's defined in O, right?
+So that looks true.
+And then X8 is statically bound to X2.
+X8, so we're calling G here, is statically bound to X2.
+So that x there refers to that x that's defined in f.
+So I think the answer to this question is a, which is the false statement.
+So since this is what number, what I say, number 3?
+Yeah, it's a.
+Good.
+I'll mark down that particular one.
+So hopefully it's a lot to read, but do you
+understand what the code says?
+So the solution strategy provided says,
+so you determine the meaning of a variable.
+You want to determine the meaning.
+You look for a declaration in the current block.
+And if there is none, you're searching the enclosing code
+block, and so on.
+So this goes back to the static scoping.
+Variations.
+You can change some of the names and see what kind of behavior you get on,
+go through all that.
+So that was from last week's material.
+Just jump back to week six, that was the week of midterm.
+Let's look at question one.
+Oh, a whole bunch of introductory text.
+So we have three variables.
+I'm gonna read it for a second.
+They're not parameters of the function and they're not locally defined in the function
+body.
+But they have to be bound to variables of the functions environment.
+So this is what we talked about, closures.
+So a closure is basically a data structure that the compiler uses that
+takes a function, when you go to execute that function,
+there's some environment that you get that has the variables,
+that gives meaning to the variables.
+So design choices, one of which, one of the design choices is to
+to determine whether the closure contains copies of the state when the function is defined,
+or whether it should contain references to memory shared between the closure and the outside environment.
+So in Scala, the nature of the variable in the environment, mutable versus immutable, determines the choice.
+Mutable variables are shared, and immutable variables are copied, so that's a difference in our closures.
+For mutable variables, the closure data structure needs to provide slots for references.
+for immutable variables, it needs to provide slots for values.
+All right, so here's our code.
+We have f and we have x and y.
+And when we execute f, we pass x and y.
+And we get back, what's this?
+What does that mean?
+It's a fat arrow, right?
+So what does that tell you?
+We talked about this in the beginning.
+What's a fat arrow on a type?
+It's a function taking no arguments so it returns an integer.
+Exactly.
+So it's a function that takes nothing and returns an integer.
+Not nothing, literally, like the type nothing, but takes no arguments.
+This is where English gets like say something in overloaded meaning.
+All right.
+So inside of my f, what's going on?
+I've got a var C, that's gonna be what type?
+Integer.
+It's an integer, why Matt?
+Because y is an integer.
+Right, and Scala's gonna do type inference there, right.
+And then we have this function that's being declared here,
+it's a unit.
+This is get unit.
+And we get back.
+Well, we access c, we add x to it, so we get our x from there, and then we return that.
+So that's our integer.
+So we get to the question.
+A way of representing the closure built for the anonymous function is using a class.
+So which of the following best describes the fields that are required in that class?
+So what fields do we need?
+Remember that parameters in Scala are immutable, and we call the difference between R and Val.
+So what do we need in order to, when we return this function,
+we need to know what c is, and we need to know when this function executes,
+we need to know what c is and we need to know what x is, right?
+So which one is it?
+Well, we need a c and we need an x, right?
+So, this one has a c and an x, this one has a c and a y, so we can exclude that.
+This one has a c and an x, this one has a c and an x, this one has a c and an x and
+a y, but we don't need the y.
+So we can exclude that.
+So we can exclude B and E, so we're down to three choices.
+Will you put your hand on matter each other?
+I was scratching my head.
+I think it's C.
+You think it's C?
+Why do you think it's C?
+Because X is a VAL and C is a VAR, and VARs are shared,
+whereas VALs are not, between closures.
+And that is exactly right,
+I just double-checking to make sure I'm not speaking that term.
+That's my interpretation too.
+So what Matt is saying is that for x, x, when we get x passed into f,
+it's a vowel, right?
+We can't override, we couldn't say x equals 5 in the middle of this code if we wanted
+to, because the compiler wouldn't let us.
+So that's not mutable.
+It's immutable.
+So final int x is good for a parameter in the closure.
+For the...
+Remember the closure is going to create like a class, right?
+This is declaring that x is in you.
+And then c, notice c is a var.
+And as Matt pointed out, and as we saw on an earlier slide, that c is going to be shared.
+Or we saw that up there I think in the text.
+That C is going to be shared across different functions returned by F.
+So if I call F multiple times, that C, I'm sorry,
+if I call this function multiple times,
+that C is going to have to be updated.
+So it's going to have to be interref.
+If I call this again, if I call F again,
+And you can look at it, if it were this one here, well,
+you'd never be able to update c because it's finally right.
+And if you look at we excluded that because of the y.
+So that was the correct answer.
+For this one well, we have no need to update x,
+So this wouldn't be an hidden graph.
+And then the last one we have.
+So the solution strategy is to determine
+the free variables of the anonymous function.
+Closure should have one field per free variable.
+Determine the variables in the environment
+that you need to bind these free variables
+and note their nature.
+So this is val versus var.
+Val becomes copy.
+And then var becomes references.
+So if you changed var c to val c and modified the function,
+you'd have to modify it because you wouldn't be able to update c.
+Or wait, did I say that wrong?
+Change var c to val c and you wouldn't be able to update c.
+I wouldn't see.
+It's just the mouse control.
+Yeah, you wouldn't be able to update C, right?
+You could try out thinking through different ones.
+Change the inner function to update C to C plus y.
+So if you start introducing y, then basically everywhere
+we had x with that nref would become a y.
+That's week six.
+Let's do something from the front.
+Because that was before the exam but not on the exam.
+Sorry, we're gonna do question two.
+Yes, this came up at one point in the disk board.
+So continuation passing, this was on your own one.
+It's an implementation style that replaces return values
+with something called a continuation function
+that's invoked with a result.
+So for example, a function in the usual return value style.
+So there we have f, takes an x that's an int,
+it returns a string, and in continuation passing style,
+you would have f takes an x, that's an int, and then k takes a string and
+returns a unit, and then the whole function will return .
+All right, so here we have this tail recursive implementation of the factorial
+function, and it uses continuation passing.
+So is anybody see?
+I'm looking for, yeah.
+I'm tripping up because the usual examples we had,
+had something that had a variable memory,
+like bar and you can change it.
+So, here, so this uses continuation passing because this is the continuation of this k
+thing, this function.
+So which of the following continuation functions fits the expected signature of k and prints
+the result to the console array?
+Alright, so if we look at here, the function has to take an int and return a unit.
+So this function takes not an int, but a list of ints.
+It does print lines.
+So that's gonna, the last expression is type unit,
+because the type of print line expression is unit.
+So that part is right, but this part isn't right
+on the left side.
+So it's not that.
+Okay.
+The next one,
+looks like the types match up, right?
+So here we have X, what's X?
+Oh, well, we don't know.
+But it could work.
+If this were an int, and if the calling code where you're passing this expression, or you're
+using this expression, x refers to an int, then that would work.
+This type is correct, but the types aren't everything.
+We also need to print the result to the console.
+So this won't actually print anything, so it can't be that.
+Okay, this one, fact.
+Well fact, we're basically trying to pass fact as K here,
+and that would mean that fact would have to take a single integer.
+And it takes more than, in fact, it takes more than an integer.
+It takes an integer and a function.
+So that won't work.
+This one here, this is looking promising.
+So I have x.
+We know for sure x is an integer because we're declaring it as such here.
+Printing x and remember that this is going to be, this expression is going to be of type unit.
+So the last expression here is the return type essentially.
+And that's conforming and doing the behavior that we're expecting.
+This one here won't print, right?
+It'll take an in, but it won't print.
+It'll do this, it'll actually return an integer too.
+So the correct answer looks like it's going to be D.
+I'm sure enough of this.
+So this is passing and continuation.
+So here, we didn't even talk about this, but
+what this is doing is if I'm passing this thing as the second parameter to my call
+to fact, my recursive call to fact, then this has to conform to that signature.
+So that means I'm creating a variable, or a value called result of N minus 1.
+And then I'm calling k with n and multiplying n times the whatever this value is.
+So that's the communication that's present.
+So to do this one, match the argument type of fun, we just did that.
+So we match the argument type of the function to the left of the arrow of
+the continuation function of the answer.
+And check the right-hand side of the arrow that is performing the requested
+functionality, which was that it was printing, right?
+I think somebody asked me about this earlier tonight, and this is bad, right?
+Is that what we talked about earlier?
+Yeah, so this is.
+variation is bad.
+I don't think this would work, because this is not a function.
+Oh, actually, this doesn't occur in the text of the question above, so you can't change
+that.
+So there's a bug in the study guide for this variation, so don't worry about it.
+I already made a note to fix that.
+Let's go back to week seven.
+So the next one we'll do is 21.
+Now, that might be our last one, because we have 10 minutes left.
+We'll see where we get.
+So 21.
+That's what we're doing.
+Ah, C, our friend.
+So C, as in many systems languages, doesn't protect us against unsafe memory access.
+So an unsafe memory access occurs whenever memory is read or written inconsistent with
+the data that is stored there, or when the lifetime of memory location is .
+So here's some code.
+Here's our main program.
+We have int x, gets the value 5.
+We have a double y that's getting a copy of x and the compiler will coerce that x which
+was an int into a double.
+And now I'm going to have p be a pointer to a double and I'm going to get the address
+of x.
+And then I'm going to have z, I'm going to dereference p as a double and
+store it in z.
+So, which line makes an unsafe memory access?
+What do we think?
+This is okay, right?
+I just told you the second one's okay.
+Because the compiler will say, oh okay, I'm going to take the int and copy it.
+Okay, what happens here?
+I go to my x, which is an int, and I get the address of x.
+And that's going to refer to some location in memory.
+I'm going to store it in p as a pointer to a double.
+Now, typically, ints and doubles in C are gonna have different numbers of bytes, right?
+So right here, I'm going to,
+I think the unsafe memory access actually happens here when I try to de-reference it,
+because I'm trying to read it.
+I'm not really writing, I'm just copying.
+Here I'm copying an address into something.
+So I think the answer here is gonna be line five.
+So the answer is line five.
+So, makes sense?
+So that could trip you up, because my eye went here and said, oh, dangerous.
+I'm taking an int, an address of an int, and I'm storing it as a pointer to a double.
+But I'm not actually doing anything unsafe yet.
+It's only here.
+Alright, so that was that one.
+Let's go do another six.
+Five minutes left.
+I'll probably do it.
+Oh, you know what I didn't do?
+I didn't talk about the variations.
+Anyway.
+So solution strategy, yes.
+When dereference the pointer.
+So that was the answer to dereference.
+You could change the code around.
+So if we change this double star p equals ampersand x,
+change that to star p was ampersand.
+Oh, sorry, in star p.
+OK.
+That would be OK.
+And then I think there would be no unsafe memory access
+in this case here.
+Everybody see why.
+I get the address of x, and I store it into a pointer to an int.
+So I'm changing this double to int.
+And now I'm dereferencing it and then
+copying it into some other variable z.
+So I think that would be OK.
+what if I allocated x dynamically in line two
+and free it before line five?
+So I allocated x dynamically in line two.
+That would mean that I would be calling malloc size event,
+right, and then at line five,
+if I had already freed x,
+So if I have copied value, I think we would need more than that.
+If I allocated it, I would have an unsafe memory access link somewhere in here.
+Wouldn't X have to itself be a pointer if you're-
+Say again?
+Wouldn't X have to be a pointer itself-
+X would have to be a pointer, but then that would make this bad, right?
+Yeah.
+to do something else, it's a little bit,
+that's why I'm saying it's, oh.
+Yeah, no, it doesn't say anything more, right?
+It just says allocate x dynamically
+so you've got a problem already, right?
+You could actually, this code would compile,
+then somewhere you would have an unsafe memory access.
+But if you freed before here,
+see it depends on what you change this to
+if you change it, right?
+doesn't really say, right? So if I copied...
+yeah, it's a little bit vague, right? You have to think through all the possible
+options. I don't think we're going to get to that last question. How about replacing
+lines four and five with that? So line four and five double Z equals... so here I
+Okay, address of x, I cast it to a pointer to a double, and
+then dereference it.
+I don't think that's safe either.
+I think that would give you the same result as the original.
+I think so, yeah.
+Well, all it's doing is-
+It's pretty in a line.
+It's doing the same thing, but doing it in one line, right?
+See that?
+Because this is address of x is going into a double, a pointer to a double.
+That's what's happening here.
+And then it's dereferencing that.
+That's what's happening here.
+Right?
+So, yeah.
+Yeah, the second one, let's see.
+If you allocated x dynamically in line two, you'd have to use a malloc.
+So x would have to be a pointer to an int.
+And then if you, I'm going to think this through.
+If you would have to either, I mean, this will compile,
+and it will take that address of whatever that is
+and store it as a double in Y.
+I guess you're not doing an unsafe memory access there.
+You're just saving it like you're storing it.
+So that line would be OK.
+then the address of x would be the address of the pointer, right?
+And then you're storing that as a pointer to a double, I think.
+Yeah, I'd have to.
+I almost want to put that code, put it in an editor and compile it and see what it does.
+Maybe run Valgrind on it, which I don't have installed on my machine,
+because we talk about that once.
+And now, I'm trying to de-reference that.
+I think here, we would still have an unsafe memory access there.
+If you freed it before line 5, I don't know that, I, if you freed it before line 5,
+I guess it, okay, the reason I'm stumbling over all this is, I almost feel like,
+you almost have to change all the lines of code to be compatible until line 5, right?
+Because then, you would potentially be trying to de-reference P,
+which would be the address of, which would, oh yeah.
+So maybe you would have double, oh,
+I'm tripping over the whole thing.
+I'm feeling like I wanna play around with this question
+and decide what I'm gonna do with it.
+So I don't have an answer for you.
+Think about it, maybe I'll think about it over the week
+and decide what I wanna say, so stay tuned to the Discord.
+Well, all right, so it's nine o'clock,
+so you got your stuff.
+Oh, I'm sorry about homework.
+Whatever the last homework grades.
+The grader told me today they were done,
+but I had a chance to review.
+So I will do that.
+I always review the grader's work
+before I publish the grades, so I want to do that.
+See you in office hours tomorrow if you need to come to office
+hours for any reason.
+Please send me a message if you're doing that so I know.
+And have a good week.
+Thanks.
+I'm gonna use this one.
+I'll use this one.
+It's a bit more easy.
+I'm gonna use this one.
+I'll use this one.
+I love this and this is a very funny one.
+I like it.
+It's fun.
+We'll show you how it's been.
+Have a good week, Dillon.
+You too.
+See you next week.
+Have fun on perfect.
+It won't take more than five minutes.
+I'll do the same thing whenever I go on vacation.
+I don't want to like...
+But that's why like the end of the...
+So the end of the school year, my office is bad at home.
+Like I'm actually going to take a few days off of work and deep clean my office.
+It's not like dirty, like dirt.
+It's just clutter.
+Yeah, exactly.
+And I have like...
+There's like a closet in my office that needs to be like...
+I just need to completely go through and throw things out.
+And this is the kind of thing that you just need time.
+Yeah.
+Large amounts of time.
+What's worked for me in the past is take like a Thursday, Friday and a Monday off and order
+food all weekend.
+Just order my food and don't try to do anything other than get up, work, and then maybe have
+a drink at the end of the day and relax.
+That's how my closet is at home.
+I have a bunch of old PCs and components and I didn't want to throw away.
+Recycling them.
+Recycling them, but clearing on hard drives.
+Yeah.
+Sometimes I want to use an old computer for something.
+Yeah.
+I have old monitors too, I really want to throw away an old 16x10 monitor because we can't
+really buy those anymore.
+Is it like an old, like with a tube in it?
+Like the CRT?
+I do have one.
+You ever seen one?
+Yes, yes.
+I first came here in LePol because I'm a transfer student.
+And I took one of the classes that was all freshmen.
+And they didn't know how old that was.
+And then I told them.
+And then they're like, oh my God, you were around when two televisions were around.
+Because they're all...
+They're probably all 19, 20.
+And I was like, yeah, I'm 28.
+And they're like, what the hell?
+I was the first thing I said was two television.
+Yep, yeah two television.
+What were they?
+I mean I used to hear the buzzing that he used to say but now that I'm older I definitely
+could not hear it.
+Yeah, TVs were all like that.
+Yeah.
+When I was a kid.
+It wasn't until, I want to say the 2000, the first decade of the 2000s I think.
+I think.
+Yeah, the first time I got a flat screen TV was 2009.
+Yeah, somewhere around then is when I had one.
+Yeah.
+So.
+Yeah.
+And then they weren't all flat screened in my house until probably 2013.
+Probably when I got rid of my last...
+Wow.
+Well...
+Have a good night.
+You too.
+I will let you know if you have any questions.
+Alright.
+Good luck.
+Thank you.
+This is when I would say stuff started to get harder last time.
+When it came to the classes.
+Around here?
+Yeah.
+The subclass of this extends this.
+And when it comes to other languages.
+It makes your brain explode.
+But I'm feeling more confident now.
+We'll see when I start working on the homework.
+Yeah.
+We'll let me know if you have any questions.
+No, we'll do.
+All right.
+I'll see you next week.
+You too.
+All right.
+I remember I was actually a kid who was looking for a new one.
+I was looking for a lot of people who wanted to be in this room.
+And I thought there was a lot of people who wanted to be here,
+but I was like, oh man, I'm going to work on that.
+I'm going to work on a little bit.
+I could do that.
+I'm going to work on a little bit.
+So let's go.
+Thank you.
+OK, so let's go.
+Thank you.
+.
+Thank you.
+Okay.
+Amen.
+do
+I'm going to interrupt.
+Amen.
