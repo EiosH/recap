@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import sys
 import time
+import os
+import gc
 from datetime import datetime
 from pathlib import Path
 
@@ -20,7 +22,9 @@ from config import (
     DATA_DIR,
     ENABLE_TF32,
     LECTURE_TXT_NAME,
+    MAX_INPUT_TOKENS,
     MAX_NEW_TOKENS,
+    MERGE_BATCH,
     MODEL_REGISTRY,
     REPORT_DIR,
     TEMPERATURE,
@@ -46,6 +50,8 @@ except ImportError:
     print("请先安装依赖: pip install -r requirements.txt")
     sys.exit(1)
 
+# 减少 CUDA 内存碎片（对“跑到最后 merge 才 OOM”的情况很关键）
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 TEACHING_PROMPT = """你是一个助教。请把老师的讲课内容精炼总结成课程知识提纲。
 要求：
@@ -175,7 +181,8 @@ def build_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
 
     model_kwargs: dict = {
         "trust_remote_code": True,
-        "device_map": "auto",
+        # 单卡 4090：显式放到 cuda:0，避免 auto 造成奇怪的 offload/切分行为
+        "device_map": "cuda:0" if torch.cuda.is_available() else "auto",
         "torch_dtype": dtype,
     }
 
@@ -226,15 +233,61 @@ def build_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
     return HuggingFacePipeline(pipeline=pipe), load_sec, quant_desc
 
 
+def _token_len(tokenizer, text: str) -> int:
+    return int(len(tokenizer.encode(text, add_special_tokens=False)))
+
+
+def _truncate_to_tokens(tokenizer, text: str, max_tokens: int) -> str:
+    ids = tokenizer.encode(text, add_special_tokens=False)
+    if len(ids) <= max_tokens:
+        return text
+    ids = ids[:max_tokens]
+    return tokenizer.decode(ids, skip_special_tokens=True)
+
+
+def chunk_lecture_tokens(tokenizer, text: str, max_tokens: int) -> list[str]:
+    """按 token 切分讲义，保证每段不超过 max_tokens。"""
+    lines = [ln for ln in text.split("\n") if ln.strip()]
+    chunks: list[str] = []
+    buf: list[str] = []
+    buf_tokens = 0
+
+    for ln in lines:
+        ln_tokens = _token_len(tokenizer, ln) + 1
+        if buf and buf_tokens + ln_tokens > max_tokens:
+            chunks.append("\n".join(buf))
+            buf = []
+            buf_tokens = 0
+        # 单行过长则截断
+        if ln_tokens > max_tokens:
+            ln = _truncate_to_tokens(tokenizer, ln, max_tokens)
+            ln_tokens = _token_len(tokenizer, ln) + 1
+        buf.append(ln)
+        buf_tokens += ln_tokens
+
+    if buf:
+        chunks.append("\n".join(buf))
+    return chunks
+
+
 def invoke_llm(
     llm: HuggingFacePipeline,
     prompt_text: str,
     token_handler: TokenUsageHandler,
 ) -> str:
-    out = llm.invoke(prompt_text, config={"callbacks": [token_handler]})
+    # inference_mode 能减少中间张量开销
+    with torch.inference_mode():
+        out = llm.invoke(prompt_text, config={"callbacks": [token_handler]})
     if isinstance(out, str):
         return out.strip()
     return str(out).strip()
+
+
+def _cuda_cleanup() -> None:
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+        torch.cuda.empty_cache()
+    gc.collect()
 
 
 def summarize_lecture(
@@ -247,7 +300,11 @@ def summarize_lecture(
     reset_cuda_peak()
     mem_before = cuda_mem_mb()
     token_handler = TokenUsageHandler()
-    chunks = chunk_lecture(lecture, CHUNK_CHARS)
+    # 用 tokenizer 按 token 分块，避免 merge 步骤输入过长导致 OOM
+    tokenizer = getattr(llm, "pipeline", None).tokenizer
+    # 留出 prompt 模板与输出空间
+    safe_in_tokens = max(512, int(MAX_INPUT_TOKENS) - 512)
+    chunks = chunk_lecture_tokens(tokenizer, lecture, safe_in_tokens)
 
     teach_tpl = PromptTemplate.from_template(TEACHING_PROMPT)
     merge_tpl = PromptTemplate.from_template(MERGE_PROMPT)
@@ -265,8 +322,29 @@ def summarize_lecture(
                 header = f"【第 {i}/{len(chunks)} 段】\n"
                 prompt = teach_tpl.format(lecture=header + chunk)
                 partials.append(invoke_llm(llm, prompt, token_handler))
-            merge_prompt = merge_tpl.format(partials="\n\n---\n\n".join(partials))
-            answer = invoke_llm(llm, merge_prompt, token_handler)
+            # 层级合并：每次合并 MERGE_BATCH 份，避免一次性上下文过长爆显存
+            round_id = 1
+            while len(partials) > 1:
+                print(f"  合并回合 {round_id}，待合并片段数: {len(partials)} ...")
+                merged: list[str] = []
+                for j in range(0, len(partials), MERGE_BATCH):
+                    batch = partials[j : j + MERGE_BATCH]
+                    mp = merge_tpl.format(partials="\n\n---\n\n".join(batch))
+                    # 保险：合并 prompt 也做截断
+                    mp = _truncate_to_tokens(tokenizer, mp, MAX_INPUT_TOKENS)
+                    try:
+                        merged.append(invoke_llm(llm, mp, token_handler))
+                    except torch.OutOfMemoryError:
+                        # OOM 兜底：进一步截断输入并清缓存后重试
+                        print("  [OOM] 合并阶段显存不足，降级输入长度后重试 ...")
+                        _cuda_cleanup()
+                        mp2 = _truncate_to_tokens(tokenizer, mp, int(MAX_INPUT_TOKENS * 0.7))
+                        merged.append(invoke_llm(llm, mp2, token_handler))
+                partials = merged
+                # 每一轮合并后主动清理，避免“最后一轮才爆”
+                _cuda_cleanup()
+                round_id += 1
+            answer = partials[0]
 
     elapsed = time.perf_counter() - start
 

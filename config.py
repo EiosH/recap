@@ -41,3 +41,9 @@ USE_FLASH_ATTENTION = True  # 见 requirements.txt；未安装时自动降级
 MAX_NEW_TOKENS = 512
 TEMPERATURE = 0.3
 CHUNK_CHARS = 4_000  # 单段约 4k 字符，减小注意力矩阵大小
+
+# 进一步的 OOM 保险：按 token 控制上下文长度
+# 4090 24GB 上，为了稳定，建议把输入控制在 3k～6k tokens 量级
+MAX_INPUT_TOKENS = 3072
+# 合并提纲时每次最多合并多少段（层级合并，避免一次性把所有段塞进去）
+MERGE_BATCH = 2
