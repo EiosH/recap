@@ -191,9 +191,15 @@ def build_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
                 bnb_4bit_use_double_quant=True,
             )
             model_kwargs.pop("torch_dtype", None)
-            quant_desc = "4bit NF4 (bitsandbytes，4090 推荐)"
+            quant_desc = "4bit NF4 (bitsandbytes，推荐)"
         except ImportError:
-            print("  警告: 未安装 bitsandbytes，回退全精度（可能 OOM）")
+            # 在 Windows / 未安装 bitsandbytes 的环境下，强行全精度加载大模型极易 OOM。
+            # 这里直接降级到 7B BF16，以保证一定能跑通。
+            print("  警告: 未安装 bitsandbytes，本次将自动降级为 7B BF16 以避免 OOM。")
+            model_id = "Qwen/Qwen2.5-7B-Instruct"
+            use_4bit = False
+            dtype = torch.bfloat16
+            model_kwargs["torch_dtype"] = dtype
 
     if USE_FLASH_ATTENTION and torch.cuda.is_available():
         try:
