@@ -10,5 +10,6 @@ protobuf>=4.25.0
 pynvml>=11.5.0
 huggingface-hub>=0.24.0
 bitsandbytes>=0.43.0
-gptqmodel>=2.0.0
+# 可选：Linux 上加载 *-AWQ 权重时需要；Windows 默认用 bitsandbytes INT4，可不装
+# gptqmodel>=2.0.0
 flash-attn>=2.6.0

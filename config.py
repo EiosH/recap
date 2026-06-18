@@ -2,36 +2,33 @@
 
 from pathlib import Path
 
-# 三档均为 Qwen2.5 AWQ INT4，加载依赖 gptqmodel（见 requirements.txt）。
+# 三档 Qwen2.5 官方权重 + bitsandbytes INT4（NF4），Windows / Linux 通用。
+# 若改用 *-AWQ 权重且已安装 gptqmodel，model_loader 会自动走 AWQ 路径。
 MODEL_REGISTRY: dict[str, dict] = {
     "32b": {
-        "model_id": "Qwen/Qwen2.5-32B-Instruct-AWQ",
-        "label": "32B · AWQ 4bit（高质量档，4090接近上限，适合复杂推理）",
-        "quant": "awq",
+        "model_id": "Qwen/Qwen2.5-32B-Instruct",
+        "label": "32B · INT4 NF4（高质量档，4090 约 18–20GB 显存）",
+        "load_in_4bit": True,
         "dtype": "float16",
         "role": "fallback_high_quality",
     },
     "14b": {
-        "model_id": "Qwen/Qwen2.5-14B-Instruct-AWQ",
-        "label": "14B · AWQ 4bit（主力档：RAG + 多学生并发最优平衡）",
-        "quant": "awq",
+        "model_id": "Qwen/Qwen2.5-14B-Instruct",
+        "label": "14B · INT4 NF4（主力档：RAG + 多学生并发最优平衡）",
+        "load_in_4bit": True,
         "dtype": "float16",
-
-        # ⭐关键（你系统真正要关心的）
         "role": "production_default",
-
-        # 建议推理参数（给你直接能用）
         "generation_config": {
             "max_tokens": 512,
             "temperature": 0.2,
-            "top_p": 0.9
-        }
+            "top_p": 0.9,
+        },
     },
-     "8b": {
-        "model_id": "Qwen/Qwen2.5-7B-Instruct-AWQ",
-        "label": "7B · AWQ 4bit（高并发轻量档，用于峰值流量）",
-        "quant": "awq",
-        "dtype": "float16",
+    "8b": {
+        "model_id": "Qwen/Qwen2.5-7B-Instruct",
+        "label": "7B · INT4 NF4（高并发轻量档，用于峰值流量）",
+        "load_in_4bit": True,
+        "dtype": "bfloat16",
         "role": "high_concurrency_fallback",
     },
 }

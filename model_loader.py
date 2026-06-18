@@ -34,24 +34,59 @@ def _setup_cuda() -> None:
     torch.cuda.empty_cache()
 
 
-def _ensure_gptqmodel() -> None:
+def _has_gptqmodel() -> bool:
     try:
         import gptqmodel  # noqa: F401
-    except ImportError as exc:
-        raise ImportError(
-            "加载 AWQ 模型需要 gptqmodel。请执行:\n"
-            "  pip install gptqmodel\n"
-            "若安装失败可尝试:\n"
-            "  pip install gptqmodel --no-build-isolation"
-        ) from exc
+
+        return True
+    except ImportError:
+        return False
+
+
+def _awq_to_base(model_id: str) -> str:
+    if model_id.endswith("-AWQ"):
+        return model_id[: -len("-AWQ")]
+    return model_id
+
+
+def _resolve_model_id(cfg: dict) -> tuple[str, str]:
+    """确定实际加载的 model_id 与量化方式描述键。"""
+    model_id = cfg["model_id"]
+    quant = cfg.get("quant", "")
+
+    if quant == "awq":
+        if _has_gptqmodel():
+            return model_id, "awq"
+        base_id = cfg.get("fallback_model_id") or _awq_to_base(model_id)
+        print(
+            "  提示: gptqmodel 未安装（Windows 上常见），"
+            f"改用 bitsandbytes INT4 加载: {base_id}"
+        )
+        return base_id, "bnb4"
+
+    if cfg.get("load_in_4bit"):
+        return model_id, "bnb4"
+
+    return model_id, "fp"
+
+
+def _apply_bnb4bit(model_kwargs: dict, dtype) -> str:
+    import bitsandbytes  # noqa: F401
+
+    model_kwargs["quantization_config"] = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=dtype,
+        bnb_4bit_use_double_quant=True,
+    )
+    return "INT4 NF4 (bitsandbytes)"
 
 
 def build_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
     """加载模型，返回 (llm, 加载秒数, 量化描述)。"""
     cfg = MODEL_REGISTRY[model_key]
-    model_id = cfg["model_id"]
     dtype = _resolve_dtype(cfg["dtype"])
-    quant = cfg.get("quant", "")
+    model_id, quant_mode = _resolve_model_id(cfg)
 
     _setup_cuda()
     print(f"\n正在加载 [{model_key}]: {model_id}")
@@ -69,21 +104,12 @@ def build_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
         "device_map": "cuda:0" if torch.cuda.is_available() else "auto",
     }
 
-    if quant == "awq":
-        _ensure_gptqmodel()
+    if quant_mode == "awq":
         model_kwargs["torch_dtype"] = dtype
         quant_desc = "AWQ INT4 (gptqmodel)"
-    elif cfg.get("load_in_4bit") and torch.cuda.is_available():
+    elif quant_mode == "bnb4" and torch.cuda.is_available():
         try:
-            import bitsandbytes  # noqa: F401
-
-            model_kwargs["quantization_config"] = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=dtype,
-                bnb_4bit_use_double_quant=True,
-            )
-            quant_desc = "INT4 NF4 (bitsandbytes)"
+            quant_desc = _apply_bnb4bit(model_kwargs, dtype)
         except ImportError:
             print("  警告: 未安装 bitsandbytes，回退全精度加载。")
             model_kwargs["torch_dtype"] = dtype
@@ -92,7 +118,7 @@ def build_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
         model_kwargs["torch_dtype"] = dtype
         quant_desc = f"{cfg['dtype']} 全精度"
 
-    if USE_FLASH_ATTENTION and torch.cuda.is_available() and quant != "awq":
+    if USE_FLASH_ATTENTION and torch.cuda.is_available() and quant_mode != "awq":
         try:
             import flash_attn  # noqa: F401
 
