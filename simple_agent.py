@@ -225,77 +225,7 @@ def chunk_lecture(text: str, size: int) -> list[str]:
     return chunks
 
 
-def build_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
-    """加载模型，返回 (llm, 加载秒数, 量化描述)。"""
-    cfg = MODEL_REGISTRY[model_key]
-    model_id = cfg["model_id"]
-    use_4bit = cfg["load_in_4bit"]
-    dtype = _resolve_dtype(cfg["dtype"])
-
-    setup_4090()
-    print(f"\n正在加载 [4090] {model_key}: {model_id}")
-    print(f"  {cfg['label']}")
-    t0 = time.perf_counter()
-
-    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-
-    model_kwargs: dict = {
-        "trust_remote_code": True,
-        # 单卡 4090：显式放到 cuda:0，避免 auto 造成奇怪的 offload/切分行为
-        "device_map": "cuda:0" if torch.cuda.is_available() else "auto",
-        "torch_dtype": dtype,
-    }
-
-    quant_desc = f"{cfg['dtype']} 全精度"
-    if use_4bit and torch.cuda.is_available():
-        try:
-            import bitsandbytes  # noqa: F401
-
-            model_kwargs["quantization_config"] = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=dtype,
-                bnb_4bit_use_double_quant=True,
-            )
-            model_kwargs.pop("torch_dtype", None)
-            quant_desc = "4bit NF4 (bitsandbytes，推荐)"
-        except ImportError:
-            # 在 Windows / 未安装 bitsandbytes 的环境下，强行全精度加载大模型极易 OOM。
-            # 这里直接降级到 7B BF16，以保证一定能跑通。
-            print("  警告: 未安装 bitsandbytes，本次将自动降级为 7B BF16 以避免 OOM。")
-            model_id = "Qwen/Qwen2.5-7B-Instruct"
-            use_4bit = False
-            dtype = torch.bfloat16
-            model_kwargs["torch_dtype"] = dtype
-
-    if USE_FLASH_ATTENTION and torch.cuda.is_available():
-        try:
-            import flash_attn  # noqa: F401
-
-            model_kwargs["attn_implementation"] = "flash_attention_2"
-            print("  已启用 Flash Attention 2")
-        except ImportError:
-            pass
-
-    model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
-
-    pipe = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        max_new_tokens=MAX_NEW_TOKENS,
-        temperature=TEMPERATURE,
-        do_sample=DO_SAMPLE,
-        return_full_text=False,
-    )
-    load_sec = time.perf_counter() - t0
-    print(f"模型加载完成，耗时 {load_sec:.1f} 秒  [{quant_desc}]\n")
-    hf_llm = HuggingFacePipeline(pipeline=pipe)
-    hf_llm.pipeline.tokenizer = tokenizer  # 确保后续能取到 tokenizer
-    return hf_llm, load_sec, quant_desc
-
+from model_loader import build_llm
 
 def _token_len(tokenizer, text: str) -> int:
     return int(len(tokenizer.encode(text, add_special_tokens=False)))

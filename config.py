@@ -2,9 +2,7 @@
 
 from pathlib import Path
 
-# RTX 4090 = 24GB GDDR6X。
-# 30b / 20b 使用真实 Qwen2.5 权重，INT4（bitsandbytes NF4）加载。
-# 注意：32B 即使 4bit 仍约需 18–20GB 显存；未安装 bitsandbytes 时 simple_agent 会降级。
+# 三档均为 Qwen2.5 AWQ INT4，加载依赖 gptqmodel（见 requirements.txt）。
 MODEL_REGISTRY: dict[str, dict] = {
     "32b": {
         "model_id": "Qwen/Qwen2.5-32B-Instruct-AWQ",
