@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-并发推理性能基准测试：对比 20b / 30b 模型在不同 token 规模与并发数下的表现。
+并发推理性能基准测试：对比 MODEL_REGISTRY 中 8b / 14b / 32b 档位在不同 token 规模与并发数下的表现。
 
 测试维度：
-  - 模型档位（20b、30b）
+  - 模型档位（默认 8b、14b、32b，见 config.MODEL_REGISTRY）
   - 输入 prompt token 数
   - 输出 max_new_tokens
   - 并发请求数
@@ -32,7 +32,15 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-from config import MODEL_REGISTRY, REPORT_DIR
+from config import (
+    DO_SAMPLE,
+    ENABLE_TF32,
+    MAX_NEW_TOKENS,
+    MODEL_REGISTRY,
+    REPORT_DIR,
+    TEMPERATURE,
+    USE_FLASH_ATTENTION,
+)
 from gpu_monitor import (
     GpuSampler,
     collect_gpu_info_text,
@@ -43,18 +51,24 @@ from gpu_monitor import (
 
 try:
     import torch
+    from langchain_huggingface import HuggingFacePipeline
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, pipeline
 except ImportError:
     print("请先安装依赖: pip install -r requirements.txt")
     sys.exit(1)
 
-from simple_agent import _cuda_cleanup, _pipe_generate, build_llm, format_chat_prompt
+from simple_agent import _cuda_cleanup, _pipe_generate, format_chat_prompt
 
 FILLER = (
     "Machine learning extracts patterns from data to support prediction and decision making. "
     "Neural networks learn hierarchical representations through gradient-based optimization. "
 )
 
-DEFAULT_MODELS = ("20b", "30b")
+# 从小到大加载，减轻显存切换压力
+_MODEL_ORDER = ("8b", "14b", "32b")
+DEFAULT_MODELS = tuple(k for k in _MODEL_ORDER if k in MODEL_REGISTRY) or tuple(
+    MODEL_REGISTRY.keys()
+)
 DEFAULT_INPUT_TOKENS = (256, 512, 1024, 2048)
 DEFAULT_OUTPUT_TOKENS = (128, 256, 512)
 DEFAULT_CONCURRENCY = (1, 2, 4, 8)
@@ -73,6 +87,8 @@ class RequestResult:
 class BenchCase:
     model_key: str
     model_id: str
+    quant: str
+    role: str
     input_tokens: int
     output_tokens: int
     concurrency: int
@@ -159,6 +175,91 @@ def build_prompt_for_tokens(tokenizer, target_tokens: int) -> tuple[str, int]:
     return prompt, tokens
 
 
+def _resolve_dtype(name: str):
+    return torch.bfloat16 if name == "bfloat16" else torch.float16
+
+
+def _setup_cuda() -> None:
+    if not torch.cuda.is_available():
+        return
+    if ENABLE_TF32:
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+    torch.cuda.empty_cache()
+
+
+def build_benchmark_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
+    """按 MODEL_REGISTRY 加载模型（支持 AWQ / bitsandbytes INT4）。"""
+    cfg = MODEL_REGISTRY[model_key]
+    model_id = cfg["model_id"]
+    dtype = _resolve_dtype(cfg["dtype"])
+    quant = cfg.get("quant", "")
+
+    _setup_cuda()
+    print(f"\n正在加载 [{model_key}]: {model_id}")
+    print(f"  {cfg['label']}")
+    if cfg.get("role"):
+        print(f"  角色: {cfg['role']}")
+    t0 = time.perf_counter()
+
+    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    model_kwargs: dict = {
+        "trust_remote_code": True,
+        "device_map": "cuda:0" if torch.cuda.is_available() else "auto",
+    }
+
+    if quant == "awq":
+        model_kwargs["torch_dtype"] = dtype
+        quant_desc = "AWQ INT4"
+    elif cfg.get("load_in_4bit") and torch.cuda.is_available():
+        try:
+            import bitsandbytes  # noqa: F401
+
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=dtype,
+                bnb_4bit_use_double_quant=True,
+            )
+            quant_desc = "INT4 NF4 (bitsandbytes)"
+        except ImportError:
+            print("  警告: 未安装 bitsandbytes，回退全精度加载。")
+            model_kwargs["torch_dtype"] = dtype
+            quant_desc = f"{cfg['dtype']} 全精度"
+    else:
+        model_kwargs["torch_dtype"] = dtype
+        quant_desc = f"{cfg['dtype']} 全精度"
+
+    if USE_FLASH_ATTENTION and torch.cuda.is_available():
+        try:
+            import flash_attn  # noqa: F401
+
+            model_kwargs["attn_implementation"] = "flash_attention_2"
+            print("  已启用 Flash Attention 2")
+        except ImportError:
+            pass
+
+    model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
+    pipe = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        max_new_tokens=MAX_NEW_TOKENS,
+        temperature=TEMPERATURE,
+        do_sample=DO_SAMPLE,
+        return_full_text=False,
+    )
+    load_sec = time.perf_counter() - t0
+    print(f"模型加载完成，耗时 {load_sec:.1f} 秒  [{quant_desc}]\n")
+
+    hf_llm = HuggingFacePipeline(pipeline=pipe)
+    hf_llm.pipeline.tokenizer = tokenizer
+    return hf_llm, load_sec, quant_desc
+
+
 def _run_one(
     llm,
     prompt: str,
@@ -230,6 +331,8 @@ def run_bench_case(
     return BenchCase(
         model_key=model_key,
         model_id=cfg["model_id"],
+        quant=cfg.get("quant", ""),
+        role=cfg.get("role", ""),
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         concurrency=concurrency,
@@ -315,6 +418,8 @@ def write_reports(
     fieldnames = [
         "model_key",
         "model_id",
+        "quant",
+        "role",
         "input_tokens",
         "actual_input_tokens",
         "output_tokens",
@@ -342,6 +447,8 @@ def write_reports(
                 {
                     "model_key": c.model_key,
                     "model_id": c.model_id,
+                    "quant": c.quant,
+                    "role": c.role,
                     "input_tokens": c.input_tokens,
                     "actual_input_tokens": c.actual_input_tokens,
                     "output_tokens": c.output_tokens,
@@ -415,6 +522,22 @@ def write_reports(
         f"- **推理串行化 (单实例队列)**: {meta['serialize']}",
         f"- **探测最大并发**: {meta['find_max']}",
         "",
+        "## 模型配置 (MODEL_REGISTRY)",
+        "",
+        _fmt_table(
+            ["档位", "HuggingFace ID", "量化", "角色"],
+            [
+                [
+                    k,
+                    v["model_id"],
+                    v.get("quant", "-"),
+                    v.get("role", "-"),
+                ]
+                for k, v in MODEL_REGISTRY.items()
+                if k in meta["models"]
+            ],
+        ),
+        "",
         "## 显卡快照",
         "",
         "```",
@@ -483,14 +606,14 @@ def write_reports(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="测试 20b/30b 模型在不同 token 与并发下的推理性能，并生成报告。"
+        description="测试 MODEL_REGISTRY 中各档位在不同 token 与并发下的推理性能，并生成报告。"
     )
     p.add_argument(
         "--models",
         nargs="+",
         default=list(DEFAULT_MODELS),
         choices=list(MODEL_REGISTRY.keys()),
-        help="要测试的模型档位（默认: 20b 30b）",
+        help=f"要测试的模型档位（默认: {' '.join(DEFAULT_MODELS)}）",
     )
     p.add_argument(
         "--input-tokens",
@@ -562,7 +685,9 @@ def main() -> None:
     print("=" * 60)
     print("并发推理性能基准测试")
     print("=" * 60)
-    print(f"模型: {models}")
+    for k in models:
+        cfg = MODEL_REGISTRY[k]
+        print(f"  [{k}] {cfg['model_id']}  ({cfg.get('quant', 'fp')}, {cfg.get('role', '-')})")
     print(f"输入 token: {input_tokens}")
     print(f"输出 token: {output_tokens}")
     print(f"并发: {concurrency_levels if not args.find_max else '(递增探测)'}")
@@ -576,7 +701,7 @@ def main() -> None:
 
     for model_key in models:
         print(f"\n>>> 加载模型 [{model_key}] ...")
-        llm, load_sec, quant_desc = build_llm(model_key)
+        llm, load_sec, quant_desc = build_benchmark_llm(model_key)
         tokenizer = llm.pipeline.tokenizer
         print(f"    量化: {quant_desc}，加载 {load_sec:.1f}s")
 

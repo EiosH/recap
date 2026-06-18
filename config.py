@@ -3,29 +3,38 @@
 from pathlib import Path
 
 # RTX 4090 = 24GB GDDR6X。
-# 注意：在 Windows / 未成功安装 bitsandbytes 时，大模型（32B）会非常容易 OOM，
-# 所以这里把 30b / 20b / 10b 档位约束在 14B / 7B 以内，优先走 4bit。
+# 30b / 20b 使用真实 Qwen2.5 权重，INT4（bitsandbytes NF4）加载。
+# 注意：32B 即使 4bit 仍约需 18–20GB 显存；未安装 bitsandbytes 时 simple_agent 会降级。
 MODEL_REGISTRY: dict[str, dict] = {
-    # 尽量大但仍相对可控的档位（优先 4bit）
-    "30b": {
-        "model_id": "Qwen/Qwen2.5-14B-Instruct",
-        "label": "14B · 4bit NF4（大模型档，需 4bit 或高显存）",
-        "load_in_4bit": True,
+    "32b": {
+        "model_id": "Qwen/Qwen2.5-32B-Instruct-AWQ",
+        "label": "32B · AWQ 4bit（高质量档，4090接近上限，适合复杂推理）",
+        "quant": "awq",
         "dtype": "float16",
+        "role": "fallback_high_quality",
     },
-    # 中档：7B 4bit，适合长讲义
-    "20b": {
-        "model_id": "Qwen/Qwen2.5-7B-Instruct",
-        "label": "7B · 4bit NF4（推荐默认档，兼顾速度与效果）",
-        "load_in_4bit": True,
-        "dtype": "bfloat16",
+    "14b": {
+        "model_id": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+        "label": "14B · AWQ 4bit（主力档：RAG + 多学生并发最优平衡）",
+        "quant": "awq",
+        "dtype": "float16",
+
+        # ⭐关键（你系统真正要关心的）
+        "role": "production_default",
+
+        # 建议推理参数（给你直接能用）
+        "generation_config": {
+            "max_tokens": 512,
+            "temperature": 0.2,
+            "top_p": 0.9
+        }
     },
-    # 小档：7B BF16，全精度更快
-    "10b": {
-        "model_id": "Qwen/Qwen2.5-7B-Instruct",
-        "label": "7B · BF16 全精度（最稳妥，优先用于排错）",
-        "load_in_4bit": False,
-        "dtype": "bfloat16",
+     "8b": {
+        "model_id": "Qwen/Qwen2.5-7B-Instruct-AWQ",
+        "label": "7B · AWQ 4bit（高并发轻量档，用于峰值流量）",
+        "quant": "awq",
+        "dtype": "float16",
+        "role": "high_concurrency_fallback",
     },
 }
 
