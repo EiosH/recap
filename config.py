@@ -2,9 +2,24 @@
 
 from pathlib import Path
 
-# 三档 Qwen2.5 官方权重 + bitsandbytes INT4（NF4），Windows / Linux 通用。
-# 若改用 *-AWQ 权重且已安装 gptqmodel，model_loader 会自动走 AWQ 路径。
+# 默认走本地 Ollama（与 course-db 同一个模型）；其余档位为 HuggingFace + bitsandbytes INT4。
+# 若 HF 档位改用 *-AWQ 权重且已安装 gptqmodel，model_loader 会自动走 AWQ 路径。
+DEFAULT_MODEL = "27b"
+
+OLLAMA_URL = "http://127.0.0.1:11434"
+OLLAMA_TIMEOUT = 600
+# Ollama 下传为 options.num_ctx —— 不设时用默认值（约 2048~4096），
+# 超出部分会从消息开头被静默截掉（system prompt 最先丢）。
+OLLAMA_NUM_CTX = 16384
+
 MODEL_REGISTRY: dict[str, dict] = {
+    "27b": {
+        "backend": "ollama",
+        "model_id": "qwen3.8:27b",
+        "label": "Ollama 本地 qwen3.8:27b（默认档，与 course-db 一致）",
+        "quant": "ollama",
+        "role": "default",
+    },
     "32b": {
         "model_id": "Qwen/Qwen2.5-32B-Instruct",
         "label": "32B · INT4 NF4（高质量档，4090 约 18–20GB 显存）",
@@ -36,7 +51,7 @@ MODEL_REGISTRY: dict[str, dict] = {
 DATA_DIR = Path(__file__).resolve().parent / "data"
 REPORT_DIR = Path(__file__).resolve().parent / "reports"
 CHUNK_RUN_DIR = DATA_DIR / "runs"  # 每段总结临时落盘目录
-LECTURE_TXT_NAME: str | None = "subtitles-519105.txt"
+LECTURE_TXT_NAME: str | None = "CSC447-lecture-2-subtitles.txt"
 
 # 4090 推理优化（在 Windows+4090 上同样生效）
 ENABLE_TF32 = True

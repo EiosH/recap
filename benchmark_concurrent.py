@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-并发推理性能基准测试：对比 MODEL_REGISTRY 中 8b / 14b / 32b 档位在不同 token 规模与并发数下的表现。
+并发推理性能基准测试：测 MODEL_REGISTRY 中各档位在不同 token 规模与并发数下的表现。
 
 测试维度：
-  - 模型档位（默认 8b、14b、32b，见 config.MODEL_REGISTRY）
+  - 模型档位（默认 config.DEFAULT_MODEL，即本地 Ollama 27b；--models 可加 HF 档位对比）
   - 输入 prompt token 数
   - 输出 max_new_tokens
   - 并发请求数
@@ -33,6 +33,7 @@ from datetime import datetime
 from pathlib import Path
 
 from config import (
+    DEFAULT_MODEL,
     MODEL_REGISTRY,
     REPORT_DIR,
 )
@@ -51,18 +52,20 @@ except ImportError:
     print("请先安装依赖: pip install -r requirements.txt")
     sys.exit(1)
 
-from simple_agent import _cuda_cleanup, _pipe_generate, format_chat_prompt
+from simple_agent import (
+    _cuda_cleanup,
+    _token_len,
+    _tokenizer_of,
+    _truncate_to_tokens,
+    invoke_llm,
+)
 
 FILLER = (
     "Machine learning extracts patterns from data to support prediction and decision making. "
     "Neural networks learn hierarchical representations through gradient-based optimization. "
 )
 
-# 从小到大加载，减轻显存切换压力
-_MODEL_ORDER = ("8b", "14b", "32b")
-DEFAULT_MODELS = tuple(k for k in _MODEL_ORDER if k in MODEL_REGISTRY) or tuple(
-    MODEL_REGISTRY.keys()
-)
+DEFAULT_MODELS = (DEFAULT_MODEL,)
 DEFAULT_INPUT_TOKENS = (256, 512, 1024, 2048)
 DEFAULT_OUTPUT_TOKENS = (128, 256, 512)
 DEFAULT_CONCURRENCY = (1, 2, 4, 8)
@@ -141,37 +144,20 @@ def _percentile(values: list[float], pct: float) -> float:
     return ordered[f] + (ordered[c] - ordered[f]) * (k - f)
 
 
-def _prompt_token_count(tokenizer, user_content: str) -> int:
-    prompt = format_chat_prompt(tokenizer, user_content)
-    return len(tokenizer.encode(prompt, add_special_tokens=False))
-
-
-def build_prompt_for_tokens(tokenizer, target_tokens: int) -> tuple[str, int]:
-    """构造接近 target_tokens 的完整 chat prompt。"""
-    user_prefix = "请用一句话概括以下内容的要点：\n\n"
-    filler = ""
-    prompt = ""
-    tokens = 0
-
-    for _ in range(10_000):
+def build_user_content(tokenizer, target_tokens: int) -> tuple[str, int]:
+    """构造约 target_tokens 的用户输入；要求展开详写，让输出尽量跑满 max_new_tokens。"""
+    filler = FILLER
+    while _token_len(tokenizer, filler) < target_tokens:
         filler += FILLER
-        user_content = user_prefix + filler
-        prompt = format_chat_prompt(tokenizer, user_content)
-        tokens = len(tokenizer.encode(prompt, add_special_tokens=False))
-        if tokens >= target_tokens:
-            break
-
-    if tokens > target_tokens + 64:
-        ids = tokenizer.encode(prompt, add_special_tokens=False)[:target_tokens]
-        prompt = tokenizer.decode(ids, skip_special_tokens=True)
-        tokens = len(tokenizer.encode(prompt, add_special_tokens=False))
-
-    return prompt, tokens
+    filler = _truncate_to_tokens(tokenizer, filler, target_tokens)
+    content = "请逐句详细展开解释以下内容，写得越长越好：\n\n" + filler
+    return content, _token_len(tokenizer, content)
 
 
 def _run_one(
     llm,
-    prompt: str,
+    tokenizer,
+    user_content: str,
     max_new_tokens: int,
     request_id: int,
     lock: threading.Lock | None,
@@ -180,9 +166,9 @@ def _run_one(
     try:
         if lock is not None:
             with lock:
-                text = _pipe_generate(llm, prompt, max_new_tokens=max_new_tokens)
+                text = invoke_llm(llm, tokenizer, user_content, max_new_tokens)
         else:
-            text = _pipe_generate(llm, prompt, max_new_tokens=max_new_tokens)
+            text = invoke_llm(llm, tokenizer, user_content, max_new_tokens)
         latency = time.perf_counter() - t0
         return RequestResult(
             request_id=request_id,
@@ -210,9 +196,10 @@ def run_bench_case(
     serialize: bool,
 ) -> BenchCase:
     cfg = MODEL_REGISTRY[model_key]
-    prompt, actual_tokens = build_prompt_for_tokens(tokenizer, input_tokens)
+    user_content, actual_tokens = build_user_content(tokenizer, input_tokens)
 
-    lock = threading.Lock() if serialize else None
+    # Ollama 服务端自己调度并行（OLLAMA_NUM_PARALLEL），客户端不加锁才能测出真实并发
+    lock = threading.Lock() if serialize and not isinstance(llm, str) else None
     mem_before = cuda_mem_mb()
     reset_cuda_peak()
 
@@ -223,7 +210,7 @@ def run_bench_case(
         with ThreadPoolExecutor(max_workers=concurrency) as pool:
             futures = [
                 pool.submit(
-                    _run_one, llm, prompt, output_tokens, i, lock
+                    _run_one, llm, tokenizer, user_content, output_tokens, i, lock
                 )
                 for i in range(concurrency)
             ]
@@ -611,7 +598,7 @@ def main() -> None:
     for model_key in models:
         print(f"\n>>> 加载模型 [{model_key}] ...")
         llm, load_sec, quant_desc = build_llm(model_key)
-        tokenizer = llm.pipeline.tokenizer
+        tokenizer = _tokenizer_of(llm)
         print(f"    量化: {quant_desc}，加载 {load_sec:.1f}s")
 
         for in_tok in input_tokens:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-LangChain + Hugging Face：读取 data 目录讲义 txt，生成课程知识提纲。
-针对 RTX 4090 (24GB) 优化；每次运行生成完整 report。
+读取 data 目录讲义 txt，生成课程知识提纲。
+默认用本地 Ollama 模型，也可切换到 Hugging Face 档位；每次运行生成完整 report。
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from config import (
     CHUNK_CHARS,
     CHUNK_RUN_DIR,
     DATA_DIR,
+    DEFAULT_MODEL,
     DO_SAMPLE,
     ENABLE_TF32,
     LECTURE_TXT_NAME,
@@ -142,7 +143,9 @@ class TokenUsageHandler(BaseCallbackHandler):
 
 
 def _estimate_tokens(text: str) -> int:
-    return max(1, len(text) // 4)
+    """没有本地分词器时的估算：中文约 1 字 1 token，英文约 4 字符 1 token。"""
+    cjk = len(re.findall(r"[\u4e00-\u9fff]", text))
+    return max(1, cjk + (len(text) - cjk) // 4)
 
 
 def resolve_lecture_txt() -> Path:
@@ -184,19 +187,6 @@ def load_lecture_text() -> tuple[Path, str]:
     return path, text
 
 
-def format_chat_prompt(tokenizer, user_content: str) -> str:
-    """单轮：system + user（用于总结任务）。"""
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_content},
-    ]
-    return tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-    )
-
-
 def format_messages_prompt(tokenizer, messages: list[dict]) -> str:
     """多轮对话 chat template。"""
     return tokenizer.apply_chat_template(
@@ -225,13 +215,24 @@ def chunk_lecture(text: str, size: int) -> list[str]:
     return chunks
 
 
-from model_loader import build_llm
+from model_loader import build_llm, ollama_chat
+
+
+def _tokenizer_of(llm: HuggingFacePipeline | str):
+    """Ollama 档位没有本地分词器，返回 None，token 数改用估算。"""
+    return None if isinstance(llm, str) else llm.pipeline.tokenizer
+
 
 def _token_len(tokenizer, text: str) -> int:
+    if tokenizer is None:
+        return _estimate_tokens(text)
     return int(len(tokenizer.encode(text, add_special_tokens=False)))
 
 
 def _truncate_to_tokens(tokenizer, text: str, max_tokens: int) -> str:
+    if tokenizer is None:
+        est = _estimate_tokens(text)
+        return text if est <= max_tokens else text[: len(text) * max_tokens // est]
     ids = tokenizer.encode(text, add_special_tokens=False)
     if len(ids) <= max_tokens:
         return text
@@ -275,17 +276,41 @@ def chunk_lecture_tokens(tokenizer, text: str, max_tokens: int) -> list[str]:
     return chunks
 
 
+def _generate(
+    llm: HuggingFacePipeline | str,
+    tokenizer,
+    messages: list[dict],
+    max_new_tokens: int,
+    temperature: float,
+    do_sample: bool,
+) -> str:
+    if isinstance(llm, str):
+        return ollama_chat(
+            llm,
+            messages,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature if do_sample else 0.0,
+        )
+    return _pipe_generate(
+        llm,
+        format_messages_prompt(tokenizer, messages),
+        max_new_tokens=max_new_tokens,
+        temperature=temperature,
+        do_sample=do_sample,
+    )
+
+
 def invoke_llm(
-    llm: HuggingFacePipeline,
+    llm: HuggingFacePipeline | str,
     tokenizer,
     user_content: str,
-    token_handler: TokenUsageHandler,
-    max_new_tokens: int | None = None,
+    max_new_tokens: int = MAX_NEW_TOKENS,
 ) -> str:
-    prompt_text = format_chat_prompt(tokenizer, user_content)
-    return _pipe_generate(
-        llm, prompt_text, max_new_tokens=max_new_tokens
-    )
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_content},
+    ]
+    return _generate(llm, tokenizer, messages, max_new_tokens, TEMPERATURE, DO_SAMPLE)
 
 
 def _pipe_generate(
@@ -316,17 +341,12 @@ def _pipe_generate(
 
 
 def invoke_chat(
-    llm: HuggingFacePipeline,
+    llm: HuggingFacePipeline | str,
     tokenizer,
     messages: list[dict],
 ) -> str:
-    prompt_text = format_messages_prompt(tokenizer, messages)
-    return _pipe_generate(
-        llm,
-        prompt_text,
-        max_new_tokens=MAX_NEW_TOKENS_CHAT,
-        temperature=CHAT_TEMPERATURE,
-        do_sample=CHAT_DO_SAMPLE,
+    return _generate(
+        llm, tokenizer, messages, MAX_NEW_TOKENS_CHAT, CHAT_TEMPERATURE, CHAT_DO_SAMPLE
     )
 
 
@@ -338,7 +358,7 @@ def _cuda_cleanup() -> None:
 
 
 def _merge_from_files(
-    llm: HuggingFacePipeline,
+    llm: HuggingFacePipeline | str,
     tokenizer,
     chunk_run: ChunkRun,
     token_handler: TokenUsageHandler,
@@ -364,7 +384,7 @@ def _merge_from_files(
             mp = _truncate_to_tokens(tokenizer, mp, MAX_INPUT_TOKENS)
             try:
                 merged = invoke_llm(
-                    llm, tokenizer, mp, token_handler, max_new_tokens=MAX_NEW_TOKENS_MERGE
+                    llm, tokenizer, mp, max_new_tokens=MAX_NEW_TOKENS_MERGE
                 )
             except torch.OutOfMemoryError:
                 print("  [OOM] 合并阶段显存不足，降级输入长度后重试 ...")
@@ -373,7 +393,7 @@ def _merge_from_files(
                     tokenizer, mp, int(MAX_INPUT_TOKENS * 0.7)
                 )
                 merged = invoke_llm(
-                    llm, tokenizer, mp, token_handler, max_new_tokens=MAX_NEW_TOKENS_MERGE
+                    llm, tokenizer, mp, max_new_tokens=MAX_NEW_TOKENS_MERGE
                 )
 
             out_path = merge_dir / f"merged-{batch_idx:03d}.txt"
@@ -387,7 +407,7 @@ def _merge_from_files(
 
 
 def summarize_lecture(
-    llm: HuggingFacePipeline,
+    llm: HuggingFacePipeline | str,
     lecture: str,
     model_key: str,
     model_id: str,
@@ -401,7 +421,7 @@ def summarize_lecture(
     # 保存预处理后全文，便于核对模型输入
     (chunk_run.run_dir / "lecture-prepared.txt").write_text(lecture, encoding="utf-8")
 
-    tokenizer = getattr(llm, "pipeline", None).tokenizer
+    tokenizer = _tokenizer_of(llm)
     safe_in_tokens = max(512, int(MAX_INPUT_TOKENS) - 512)
     chunks = chunk_lecture_tokens(tokenizer, lecture, safe_in_tokens)
 
@@ -412,7 +432,7 @@ def summarize_lecture(
             print(f"  处理片段 {i}/{len(chunks)} ...")
             chunk_run.save_input(i, chunk)
             user_msg = USER_CHUNK_TEMPLATE.format(lecture=chunk)
-            summary = invoke_llm(llm, tokenizer, user_msg, token_handler)
+            summary = invoke_llm(llm, tokenizer, user_msg)
             saved = chunk_run.save_summary(i, summary)
             print(f"    已保存: {saved.name} ({len(summary):,} 字符)")
             _cuda_cleanup()
@@ -464,7 +484,7 @@ def print_menu() -> None:
     print("\n命令:")
     print("  run          生成提纲（保存为 *-outline-{模型}.txt）")
     print("  chat         基于最近提纲，选择模型后命令行对话")
-    print("  30b/20b/10b  切换模型")
+    print(f"  {'/'.join(MODEL_REGISTRY)}  切换模型")
     print("  gpu          刷新显卡信息")
     print("  quit         退出")
 
@@ -508,7 +528,7 @@ def _pick_chat_model(default_key: str) -> str:
 
 
 def run_chat_session(
-    llm: HuggingFacePipeline,
+    llm: HuggingFacePipeline | str,
     tokenizer,
     outline_text: str,
     outline_file: Path,
@@ -553,7 +573,7 @@ def run_chat_session(
             reply = invoke_chat(llm, tokenizer, messages)
         except torch.OutOfMemoryError:
             _cuda_cleanup()
-            print("[OOM] 显存不足。请尝试 10b 模型，或输入 clear 清空历史后重试。\n")
+            print("[OOM] 显存不足。请尝试 8b 模型，或输入 clear 清空历史后重试。\n")
             continue
 
         elapsed = time.perf_counter() - t0
@@ -583,8 +603,8 @@ def main() -> None:
     print(f"  预处理后: {len(lecture_text):,} 字符  {len(lecture_text.split(chr(10)+chr(10))):,} 段")
     print_menu()
 
-    current_key = "10b"
-    llm: HuggingFacePipeline | None = None
+    current_key = DEFAULT_MODEL
+    llm: HuggingFacePipeline | str | None = None
     loaded_key: str | None = None
     load_time_sec = 0.0
     quant_mode = ""
@@ -623,14 +643,14 @@ def main() -> None:
                 loaded_key = chat_model
                 current_key = chat_model
             assert llm is not None
-            tokenizer = llm.pipeline.tokenizer
+            tokenizer = _tokenizer_of(llm)
             outline_text = outline_file.read_text(encoding="utf-8").strip()
             run_chat_session(
                 llm, tokenizer, outline_text, outline_file, chat_model
             )
             continue
         if raw != "run":
-            print("未知命令。可用: run | chat | 30b/20b/10b | gpu | quit")
+            print(f"未知命令。可用: run | chat | {'/'.join(MODEL_REGISTRY)} | gpu | quit")
             continue
 
         model_id = cfg["model_id"]

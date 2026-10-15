@@ -1,14 +1,20 @@
-"""按 MODEL_REGISTRY 加载 HuggingFace 模型（AWQ / bitsandbytes INT4 / 全精度）。"""
+"""按 MODEL_REGISTRY 加载模型：本地 Ollama，或 HuggingFace（AWQ / bitsandbytes INT4 / 全精度）。"""
 
 from __future__ import annotations
 
+import json
 import time
+import urllib.error
+import urllib.request
 
 from config import (
     DO_SAMPLE,
     ENABLE_TF32,
     MAX_NEW_TOKENS,
     MODEL_REGISTRY,
+    OLLAMA_NUM_CTX,
+    OLLAMA_TIMEOUT,
+    OLLAMA_URL,
     TEMPERATURE,
     USE_FLASH_ATTENTION,
 )
@@ -19,6 +25,55 @@ try:
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, pipeline
 except ImportError as exc:
     raise ImportError("请先安装依赖: pip install -r requirements.txt") from exc
+
+
+def _ollama_post(path: str, payload: dict) -> dict:
+    req = urllib.request.Request(
+        OLLAMA_URL + path,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=OLLAMA_TIMEOUT) as resp:
+        return json.loads(resp.read())
+
+
+def ollama_chat(
+    model: str, messages: list[dict], *, max_new_tokens: int, temperature: float
+) -> str:
+    """调用 Ollama /api/chat；think 关闭，避免 qwen 的思考过程拖慢输出。"""
+    data = _ollama_post(
+        "/api/chat",
+        {
+            "model": model,
+            "messages": messages,
+            "stream": False,
+            "think": False,
+            "options": {
+                "temperature": temperature,
+                "num_predict": max_new_tokens,
+                "num_ctx": OLLAMA_NUM_CTX,
+                "seed": 42,
+            },
+        },
+    )
+    return data["message"]["content"].strip()
+
+
+def _load_ollama(model_key: str, cfg: dict) -> tuple[str, float, str]:
+    model = cfg["model_id"]
+    print(f"\n正在加载 [{model_key}]: Ollama {model} @ {OLLAMA_URL}")
+    t0 = time.perf_counter()
+    try:
+        # 空 prompt 只把模型载入显存，避免第一次请求的耗时混进测试结果
+        _ollama_post("/api/generate", {"model": model})
+    except urllib.error.URLError as e:
+        raise RuntimeError(
+            f"Ollama 调用失败（{OLLAMA_URL}，模型 {model}）: {e}\n"
+            f"请确认已运行 `ollama serve`，并已 `ollama pull {model}`。"
+        ) from e
+    load_sec = time.perf_counter() - t0
+    print(f"模型加载完成，耗时 {load_sec:.1f} 秒  [Ollama]\n")
+    return model, load_sec, "Ollama"
 
 
 def _resolve_dtype(name: str):
@@ -82,9 +137,11 @@ def _apply_bnb4bit(model_kwargs: dict, dtype) -> str:
     return "INT4 NF4 (bitsandbytes)"
 
 
-def build_llm(model_key: str) -> tuple[HuggingFacePipeline, float, str]:
-    """加载模型，返回 (llm, 加载秒数, 量化描述)。"""
+def build_llm(model_key: str) -> tuple[HuggingFacePipeline | str, float, str]:
+    """加载模型，返回 (llm, 加载秒数, 量化描述)。Ollama 档位的 llm 是模型名字符串。"""
     cfg = MODEL_REGISTRY[model_key]
+    if cfg.get("backend") == "ollama":
+        return _load_ollama(model_key, cfg)
     dtype = _resolve_dtype(cfg["dtype"])
     model_id, quant_mode = _resolve_model_id(cfg)
 
