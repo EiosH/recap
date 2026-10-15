@@ -1,9 +1,9 @@
-"""分段总结落盘：每段写完即存文件，最终从磁盘拼接，避免内存堆积与合并丢内容。"""
+"""分段总结落盘：每段写完即存文件，支持中断后从已完成的段继续，全部完成后清理。"""
 
 from __future__ import annotations
 
+import shutil
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 
 
@@ -14,12 +14,11 @@ class ChunkRun:
     source_name: str
 
     @classmethod
-    def create(cls, base_dir: Path, model_key: str, source_name: str) -> "ChunkRun":
-        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        run_dir = base_dir / f"{stamp}-{model_key}"
+    def open(cls, base_dir: Path, model_key: str, source_name: str) -> "ChunkRun":
+        """同一讲义 + 同一模型固定使用一个目录，中断后再次运行会复用它。"""
+        run_dir = base_dir / f"{Path(source_name).stem}-{model_key}"
         run_dir.mkdir(parents=True, exist_ok=True)
-        meta = run_dir / "meta.txt"
-        meta.write_text(
+        (run_dir / "meta.txt").write_text(
             f"source={source_name}\nmodel_key={model_key}\n",
             encoding="utf-8",
         )
@@ -31,34 +30,32 @@ class ChunkRun:
     def input_path(self, index: int) -> Path:
         return self.run_dir / f"input-{index:03d}.txt"
 
-    def save_input(self, index: int, text: str) -> Path:
-        path = self.input_path(index)
-        path.write_text(text.strip() + "\n", encoding="utf-8")
-        return path
+    def is_done(self, index: int, text: str) -> bool:
+        """该段已有总结，且当时的输入与本次切分结果一致。"""
+        inp = self.input_path(index)
+        return (
+            self.summary_path(index).exists()
+            and inp.exists()
+            and inp.read_text(encoding="utf-8") == text.strip() + "\n"
+        )
 
-    def save_summary(self, index: int, text: str) -> Path:
-        path = self.summary_path(index)
-        path.write_text(text.strip() + "\n", encoding="utf-8")
-        return path
+    def save_chunk(self, index: int, text: str, summary: str) -> Path:
+        # input 最后写：只有 summary 写完后它才与本次输入一致，is_done 才会成立
+        self.summary_path(index).write_text(summary.strip() + "\n", encoding="utf-8")
+        self.input_path(index).write_text(text.strip() + "\n", encoding="utf-8")
+        return self.summary_path(index)
 
-    def list_summaries(self) -> list[Path]:
-        return sorted(self.run_dir.glob("summary-*.txt"))
+    def list_summaries(self, count: int) -> list[Path]:
+        return [self.summary_path(i) for i in range(1, count + 1)]
 
-    def assemble_concat(self) -> str:
+    def assemble_concat(self, count: int) -> str:
         """从磁盘读取各段总结，直接拼接（不丢内容）。"""
         parts: list[str] = []
-        files = self.list_summaries()
-        for i, path in enumerate(files, 1):
+        for i, path in enumerate(self.list_summaries(count), 1):
             body = path.read_text(encoding="utf-8").strip()
-            if not body:
-                continue
-            parts.append(f"## 第 {i} 段\n\n{body}")
+            if body:
+                parts.append(f"## Part {i}\n\n{body}")
         return "\n\n".join(parts).strip()
 
-    def save_assembled(self, text: str) -> Path:
-        out = self.run_dir / f"outline-{self.model_key}.txt"
-        out.write_text(text.strip() + "\n", encoding="utf-8")
-        # 兼容旧文件名
-        legacy = self.run_dir / "assembled-outline.txt"
-        legacy.write_text(text.strip() + "\n", encoding="utf-8")
-        return out
+    def cleanup(self) -> None:
+        shutil.rmtree(self.run_dir, ignore_errors=True)

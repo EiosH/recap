@@ -66,30 +66,31 @@ except ImportError:
 # 减少 CUDA 内存碎片（对“跑到最后 merge 才 OOM”的情况很关键）
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
-SYSTEM_PROMPT = """你是大学课程助教。你的任务是根据课堂录音自动转写的英文字幕，提炼课程知识提纲（用中文输出）。
+SYSTEM_PROMPT = """You are a university teaching assistant. Your task is to turn auto-generated English lecture subtitles into a structured outline of the course knowledge.
 
-严格要求：
-1. 只总结字幕里实际讲到的内容，不要编造、不要臆测；
-2. 忽略口语重复、语气词、与课程无关的闲聊；忽略非知识外的课程安排、考试安排等杂项；
-3. 保留专业术语（必要时中英对照）；
-4. 用清晰的结构化大纲，确保覆盖该段所有重要概念。
+Strict rules:
+1. Write the outline in English only.
+2. Summarize only what the lecture actually covers; do not invent or speculate.
+3. Ignore verbal repetition, filler words, and off-topic chatter; ignore logistics such as course schedules and exam arrangements.
+4. Keep technical terms exactly as used in the lecture.
+5. Use a clear hierarchical outline that covers every important concept in the segment.
 """
 
 
-USER_CHUNK_TEMPLATE = """以下是一段课堂录音的英文字幕（自动转写，可能有识别错误）：
+USER_CHUNK_TEMPLATE = """Below is a segment of English lecture subtitles (auto-transcribed, may contain recognition errors):
 
 ---
 {lecture}
 ---
 
-请提炼本段课程知识提纲（中文，条目式）。"""
+Write a bullet-point outline of the course knowledge in this segment, in English."""
 
 
-MERGE_USER_TEMPLATE = """以下是同一堂课各片段的知识提纲，请合并为一份完整提纲（中文）：
-- 结构化、去重，但不要删减知识点；
-- 保留术语与概念。
+MERGE_USER_TEMPLATE = """Below are outlines of consecutive segments of the same lecture. Merge them into one complete outline, in English:
+- Keep it structured and remove duplicates, but do not drop any knowledge point;
+- Keep all technical terms and concepts.
 
-各片段提纲：
+Segment outlines:
 ---
 {partials}
 ---"""
@@ -361,11 +362,11 @@ def _merge_from_files(
     llm: HuggingFacePipeline | str,
     tokenizer,
     chunk_run: ChunkRun,
-    token_handler: TokenUsageHandler,
+    num_chunks: int,
 ) -> str:
     """从磁盘读取 summary 文件，小批量 LLM 合并（可选模式）。"""
     merge_tpl = PromptTemplate.from_template(MERGE_USER_TEMPLATE)
-    paths = chunk_run.list_summaries()
+    paths = chunk_run.list_summaries(num_chunks)
     level = 0
 
     while len(paths) > 1:
@@ -412,39 +413,40 @@ def summarize_lecture(
     model_key: str,
     model_id: str,
     source_name: str,
-) -> tuple[RunMetrics, int, Path]:
+) -> tuple[RunMetrics, int, ChunkRun]:
     reset_cuda_peak()
     mem_before = cuda_mem_mb()
     token_handler = TokenUsageHandler()
-    chunk_run = ChunkRun.create(CHUNK_RUN_DIR, model_key, source_name)
+    chunk_run = ChunkRun.open(CHUNK_RUN_DIR, model_key, source_name)
     print(f"分段结果目录: {chunk_run.run_dir}")
-    # 保存预处理后全文，便于核对模型输入
-    (chunk_run.run_dir / "lecture-prepared.txt").write_text(lecture, encoding="utf-8")
 
     tokenizer = _tokenizer_of(llm)
     safe_in_tokens = max(512, int(MAX_INPUT_TOKENS) - 512)
     chunks = chunk_lecture_tokens(tokenizer, lecture, safe_in_tokens)
 
+    done = [i for i, c in enumerate(chunks, 1) if chunk_run.is_done(i, c)]
+    if done:
+        print(f"断点继续：{len(done)}/{len(chunks)} 段已完成，跳过。")
+
     start = time.perf_counter()
     with GpuSampler(interval=0.5) as sampler:
         print(f"讲义分 {len(chunks)} 段，逐段总结并落盘 ...")
         for i, chunk in enumerate(chunks, 1):
+            if i in done:
+                continue
             print(f"  处理片段 {i}/{len(chunks)} ...")
-            chunk_run.save_input(i, chunk)
             user_msg = USER_CHUNK_TEMPLATE.format(lecture=chunk)
             summary = invoke_llm(llm, tokenizer, user_msg)
-            saved = chunk_run.save_summary(i, summary)
+            saved = chunk_run.save_chunk(i, chunk, summary)
             print(f"    已保存: {saved.name} ({len(summary):,} 字符)")
             _cuda_cleanup()
 
         if ASSEMBLE_MODE == "merge" and len(chunks) > 1:
             print("从磁盘读取各段，进行 LLM 合并 ...")
-            answer = _merge_from_files(llm, tokenizer, chunk_run, token_handler)
+            answer = _merge_from_files(llm, tokenizer, chunk_run, len(chunks))
         else:
             print("从磁盘拼接各段总结（不二次压缩）...")
-            answer = chunk_run.assemble_concat()
-
-        chunk_run.save_assembled(answer)
+            answer = chunk_run.assemble_concat(len(chunks))
 
     elapsed = time.perf_counter() - start
 
@@ -473,7 +475,7 @@ def summarize_lecture(
         gpu_mem_peak_mb=cuda_peak_mb(),
         gpu_util_samples=list(sampler.samples),
     )
-    return metrics, len(chunks), chunk_run.run_dir
+    return metrics, len(chunks), chunk_run
 
 
 def print_menu() -> None:
@@ -666,7 +668,7 @@ def main() -> None:
         gpu_snapshot = collect_gpu_info_text()
 
         print(f"\n>>> 正在用 [{current_key}] 生成课程知识提纲 ...\n")
-        metrics, num_chunks, chunk_run_dir = summarize_lecture(
+        metrics, num_chunks, chunk_run = summarize_lecture(
             llm,
             lecture_text,
             current_key,
@@ -680,7 +682,8 @@ def main() -> None:
         out_name = outline_path(DATA_DIR, lecture_path.stem, current_key)
         out_name.write_text(metrics.answer, encoding="utf-8")
         print(f"提纲已保存: {out_name}")
-        print(f"分段总结目录: {chunk_run_dir}")
+        chunk_run.cleanup()
+        print(f"已清理中间产物: {chunk_run.run_dir}")
 
         report = RunReport(
             metrics=metrics,
@@ -699,7 +702,6 @@ def main() -> None:
                 "max_new_tokens": MAX_NEW_TOKENS,
                 "temperature": TEMPERATURE,
                 "assemble_mode": ASSEMBLE_MODE,
-                "chunk_run_dir": str(chunk_run_dir),
             },
         )
         report_path = write_run_report(REPORT_DIR, report)
