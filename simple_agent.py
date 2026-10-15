@@ -15,11 +15,9 @@ from datetime import datetime
 from pathlib import Path
 
 from langchain_core.callbacks import BaseCallbackHandler
-from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFacePipeline
 
 from config import (
-    ASSEMBLE_MODE,
     CHAT_DO_SAMPLE,
     CHAT_TEMPERATURE,
     CHUNK_CHARS,
@@ -32,9 +30,9 @@ from config import (
     MAX_INPUT_TOKENS,
     MAX_NEW_TOKENS,
     MAX_NEW_TOKENS_CHAT,
-    MAX_NEW_TOKENS_MERGE,
+    MAX_NEW_TOKENS_OUTLINE,
+    MAX_OUTLINE_INPUT_TOKENS,
     MAX_OUTLINE_TOKENS_CHAT,
-    MERGE_BATCH,
     MODEL_REGISTRY,
     REPORT_DIR,
     TEMPERATURE,
@@ -66,34 +64,43 @@ except ImportError:
 # 减少 CUDA 内存碎片（对“跑到最后 merge 才 OOM”的情况很关键）
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
-SYSTEM_PROMPT = """You are a university teaching assistant. Your task is to turn auto-generated English lecture subtitles into a structured outline of the course knowledge.
+SYSTEM_PROMPT = """You are a university teaching assistant who writes course outlines from auto-generated English lecture subtitles.
 
 Strict rules:
-1. Write the outline in English only.
-2. Summarize only what the lecture actually covers; do not invent or speculate.
+1. Write in English only.
+2. Include only what the lecture actually covers; do not invent or speculate.
 3. Ignore verbal repetition, filler words, and off-topic chatter; ignore logistics such as course schedules and exam arrangements.
 4. Keep technical terms exactly as used in the lecture.
-5. Use a clear hierarchical outline that covers every important concept in the segment.
 """
 
 
-USER_CHUNK_TEMPLATE = """Below is a segment of English lecture subtitles (auto-transcribed, may contain recognition errors):
+USER_CHUNK_TEMPLATE = """Below is one segment of a lecture's subtitles (auto-transcribed, may contain recognition errors):
 
 ---
 {lecture}
 ---
 
-Write a bullet-point outline of the course knowledge in this segment, in English."""
+Extract concise study notes on the knowledge taught in this segment:
+- Bullet points only, no headings, at most 250 words.
+- Capture concepts, definitions, key examples, and technical terms.
+- Do not mention the segment or the speaker; just state the knowledge."""
 
 
-MERGE_USER_TEMPLATE = """Below are outlines of consecutive segments of the same lecture. Merge them into one complete outline, in English:
-- Keep it structured and remove duplicates, but do not drop any knowledge point;
-- Keep all technical terms and concepts.
+OUTLINE_USER_TEMPLATE = """Below are study notes taken in order from different segments of one lecture:
 
-Segment outlines:
 ---
-{partials}
----"""
+{notes}
+---
+
+Reorganize them into a single course outline that reflects the real knowledge structure of the lecture.
+
+Requirements:
+- Length: 2,000-3,000 words in total. Stay within this range.
+- Organize by topic and concept hierarchy (main topics -> subtopics -> key points), not by the order of the notes. Merge points about the same concept even if they appear in different notes.
+- Never mention notes, segments, or parts.
+- Keep definitions, key examples, and technical terms; drop repetitions and minor asides.
+- Use Markdown headings (#, ##, ###) for the structure and bullet points for the details.
+- Output only the outline."""
 
 
 CHAT_SYSTEM_TEMPLATE = """你是大学课程助教。下面是一份基于课堂录音整理的课程知识提纲，请仅依据提纲内容回答学生问题。
@@ -358,53 +365,25 @@ def _cuda_cleanup() -> None:
     gc.collect()
 
 
-def _merge_from_files(
+def _build_outline(
     llm: HuggingFacePipeline | str,
     tokenizer,
     chunk_run: ChunkRun,
     num_chunks: int,
 ) -> str:
-    """从磁盘读取 summary 文件，小批量 LLM 合并（可选模式）。"""
-    merge_tpl = PromptTemplate.from_template(MERGE_USER_TEMPLATE)
-    paths = chunk_run.list_summaries(num_chunks)
-    level = 0
-
-    while len(paths) > 1:
-        level += 1
-        print(f"  合并回合 {level}，待合并文件数: {len(paths)} ...")
-        merged_paths: list[Path] = []
-        merge_dir = chunk_run.run_dir / f"merge-L{level}"
-        merge_dir.mkdir(exist_ok=True)
-
-        for batch_idx, j in enumerate(range(0, len(paths), MERGE_BATCH), 1):
-            batch_paths = paths[j : j + MERGE_BATCH]
-            batch_texts = [
-                p.read_text(encoding="utf-8").strip() for p in batch_paths
-            ]
-            mp = merge_tpl.format(partials="\n\n---\n\n".join(batch_texts))
-            mp = _truncate_to_tokens(tokenizer, mp, MAX_INPUT_TOKENS)
-            try:
-                merged = invoke_llm(
-                    llm, tokenizer, mp, max_new_tokens=MAX_NEW_TOKENS_MERGE
-                )
-            except torch.OutOfMemoryError:
-                print("  [OOM] 合并阶段显存不足，降级输入长度后重试 ...")
-                _cuda_cleanup()
-                mp = _truncate_to_tokens(
-                    tokenizer, mp, int(MAX_INPUT_TOKENS * 0.7)
-                )
-                merged = invoke_llm(
-                    llm, tokenizer, mp, max_new_tokens=MAX_NEW_TOKENS_MERGE
-                )
-
-            out_path = merge_dir / f"merged-{batch_idx:03d}.txt"
-            out_path.write_text(merged.strip() + "\n", encoding="utf-8")
-            merged_paths.append(out_path)
-            _cuda_cleanup()
-
-        paths = merged_paths
-
-    return paths[0].read_text(encoding="utf-8").strip()
+    """一次读入全部分段笔记，按课程知识结构重组为最终提纲。"""
+    notes = "\n\n---\n\n".join(
+        p.read_text(encoding="utf-8").strip()
+        for p in chunk_run.list_summaries(num_chunks)
+    )
+    if _token_len(tokenizer, notes) > MAX_OUTLINE_INPUT_TOKENS:
+        print(
+            f"  警告: 分段笔记超过 {MAX_OUTLINE_INPUT_TOKENS} tokens，"
+            "末尾部分会被截掉，提纲可能缺少课程后段内容。"
+        )
+        notes = _truncate_to_tokens(tokenizer, notes, MAX_OUTLINE_INPUT_TOKENS)
+    user_msg = OUTLINE_USER_TEMPLATE.format(notes=notes)
+    return invoke_llm(llm, tokenizer, user_msg, max_new_tokens=MAX_NEW_TOKENS_OUTLINE)
 
 
 def summarize_lecture(
@@ -430,7 +409,7 @@ def summarize_lecture(
 
     start = time.perf_counter()
     with GpuSampler(interval=0.5) as sampler:
-        print(f"讲义分 {len(chunks)} 段，逐段总结并落盘 ...")
+        print(f"讲义分 {len(chunks)} 段，逐段提取笔记并落盘 ...")
         for i, chunk in enumerate(chunks, 1):
             if i in done:
                 continue
@@ -438,15 +417,12 @@ def summarize_lecture(
             user_msg = USER_CHUNK_TEMPLATE.format(lecture=chunk)
             summary = invoke_llm(llm, tokenizer, user_msg)
             saved = chunk_run.save_chunk(i, chunk, summary)
-            print(f"    已保存: {saved.name} ({len(summary):,} 字符)")
+            print(f"    已保存: {saved.name} ({len(summary.split()):,} 词)")
             _cuda_cleanup()
 
-        if ASSEMBLE_MODE == "merge" and len(chunks) > 1:
-            print("从磁盘读取各段，进行 LLM 合并 ...")
-            answer = _merge_from_files(llm, tokenizer, chunk_run, len(chunks))
-        else:
-            print("从磁盘拼接各段总结（不二次压缩）...")
-            answer = chunk_run.assemble_concat(len(chunks))
+        print("按课程知识结构生成最终提纲 ...")
+        answer = _build_outline(llm, tokenizer, chunk_run, len(chunks))
+        print(f"  提纲长度: {len(answer.split()):,} 词（目标 2000~3000）")
 
     elapsed = time.perf_counter() - start
 
@@ -462,8 +438,7 @@ def summarize_lecture(
         model_key=model_key,
         model_id=model_id,
         question=(
-            f"[讲义] {source_name} ({len(lecture):,} 字符, {len(chunks)} 段, "
-            f"组装={ASSEMBLE_MODE})"
+            f"[讲义] {source_name} ({len(lecture):,} 字符, {len(chunks)} 段)"
         ),
         answer=answer,
         elapsed_sec=elapsed,
@@ -701,7 +676,6 @@ def main() -> None:
                 "chunk_chars": CHUNK_CHARS,
                 "max_new_tokens": MAX_NEW_TOKENS,
                 "temperature": TEMPERATURE,
-                "assemble_mode": ASSEMBLE_MODE,
             },
         )
         report_path = write_run_report(REPORT_DIR, report)

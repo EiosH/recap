@@ -48,14 +48,5 @@ class ChunkRun:
     def list_summaries(self, count: int) -> list[Path]:
         return [self.summary_path(i) for i in range(1, count + 1)]
 
-    def assemble_concat(self, count: int) -> str:
-        """从磁盘读取各段总结，直接拼接（不丢内容）。"""
-        parts: list[str] = []
-        for i, path in enumerate(self.list_summaries(count), 1):
-            body = path.read_text(encoding="utf-8").strip()
-            if body:
-                parts.append(f"## Part {i}\n\n{body}")
-        return "\n\n".join(parts).strip()
-
     def cleanup(self) -> None:
         shutil.rmtree(self.run_dir, ignore_errors=True)

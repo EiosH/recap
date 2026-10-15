@@ -57,8 +57,8 @@ LECTURE_TXT_NAME: str | None = "CSC447-lecture-2-subtitles.txt"
 ENABLE_TF32 = True
 USE_FLASH_ATTENTION = True  # 见 requirements.txt；未安装时自动降级
 
-# 单段总结允许更长输出，避免提纲被截断
-MAX_NEW_TOKENS = 1536
+# 单段只出简短笔记（prompt 要求 ≤250 词），这里是硬上限
+MAX_NEW_TOKENS = 600
 TEMPERATURE = 0.1
 DO_SAMPLE = False  # 总结任务用贪心解码，减少胡编
 CHUNK_CHARS = 4_000
@@ -66,12 +66,10 @@ CHUNK_CHARS = 4_000
 # 按 token 控制每段输入上限
 MAX_INPUT_TOKENS = 3072
 
-# 最终组装方式：
-# - concat：从磁盘读取各段 summary 直接拼接（推荐，不丢知识点）
-# - merge：再用 LLM 合并（更短，可能丢细节）
-ASSEMBLE_MODE = "concat"
-MERGE_BATCH = 2
-MAX_NEW_TOKENS_MERGE = 1024
+# 最终提纲：一次读入全部分段笔记，按知识结构重组，目标 2000~3000 英文单词。
+# 输入 + 输出要放得进 OLLAMA_NUM_CTX，否则 Ollama 会从开头静默截断。
+MAX_OUTLINE_INPUT_TOKENS = 10000
+MAX_NEW_TOKENS_OUTLINE = 5000
 
 # 命令行 chat 对话
 MAX_NEW_TOKENS_CHAT = 1024
